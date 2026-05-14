@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Data files (runtime-generated)
+backend/data/tasks.json
+backend/data/notes.json
+backend/data/statuses.json
+
+# OS
+.DS_Store
+Thumbs.db
