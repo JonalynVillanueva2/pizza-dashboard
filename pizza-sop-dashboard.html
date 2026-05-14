@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pizza Restaurants – Tarro SOP Dashboard</title>
+<style>
+/* ═══════════════════════════════════════════════
+   TARRO BRAND PALETTE
+   Purple: #6B0AC9  |  Green: #3DDC84
+═══════════════════════════════════════════════ */
+:root {
+  /* Tarro Purple */
+  --tp-900:  #3A0070;
+  --tp-800:  #52009E;
+  --tp-700:  #6B0AC9;   /* PRIMARY */
+  --tp-600:  #7C24D4;
+  --tp-500:  #9147E0;
+  --tp-300:  #B78EEE;
+  --tp-100:  #EDE1FB;
+  --tp-50:   #F7F1FE;
+
+  /* Tarro Green */
+  --tg-700:  #1EAA5C;
+  --tg-500:  #3DDC84;   /* ACCENT */
+  --tg-300:  #7DEDB0;
+  --tg-100:  #D4F7E6;
+  --tg-50:   #EDFBF4;
+
+  /* Neutrals */
+  --t-dark:      #18013A;   /* near-black with purple tint */
+  --t-charcoal:  #2A0E55;
+  --t-text:      #1A0040;
+  --t-muted:     #6B5F80;
+  --t-border:    #E2D9F3;
+  --t-surface:   #FFFFFF;
+  --t-bg:        #FAF8FE;   /* very faint purple tint */
+
+  /* Status colours */
+  --s-active-bg:  #EDE1FB; --s-active-fg:  #52009E;
+  --s-churned-bg: #FFEBEE; --s-churned-fg: #C62828;
+  --s-atrisk-bg:  #FFF8E1; --s-atrisk-fg:  #E65100;
+  --s-review-bg:  #E0F2F1; --s-review-fg:  #00695C;
+  --s-inactive-bg:#ECEFF1; --s-inactive-fg:#455A64;
+  --s-new-bg:     #D4F7E6; --s-new-fg:     #1EAA5C;
+
+  --shadow-sm:  0 1px 4px rgba(107,10,201,0.07);
+  --shadow:     0 2px 12px rgba(107,10,201,0.10);
+  --shadow-lg:  0 6px 28px rgba(107,10,201,0.14);
+  --radius:     12px;
+  --radius-sm:  8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  background: var(--t-bg);
+  color: var(--t-text);
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════
+   HEADER
+════════════════════════════════════════════ */
+header {
+  background: var(--t-dark);
+  color: white;
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 3px 20px rgba(24,1,58,0.5);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-left { display: flex; align-items: center; gap: 18px; }
+
+/* ── Tarro Logo (faithful SVG recreation) ── */
+.tarro-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  gap: 0;
+}
+.tarro-logo svg { height: 30px; width: auto; }
+
+.logo-divider {
+  width: 1px; height: 28px;
+  background: rgba(255,255,255,0.15);
+  margin: 0 16px;
+}
+.logo-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.2px;
+}
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-date  { font-size: 11px; color: rgba(255,255,255,0.4); text-align: right; }
+
+.btn-notes-toggle {
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(61,220,132,0.4);
+  background: rgba(61,220,132,0.1);
+  color: var(--tg-300);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn-notes-toggle:hover {
+  background: rgba(61,220,132,0.2);
+  border-color: var(--tg-500);
+  color: white;
+}
+
+/* ════════════════════════════════════════════
+   GLOBAL NOTES PANEL
+════════════════════════════════════════════ */
+.notes-panel {
+  background: var(--t-charcoal);
+  border-bottom: 2px solid var(--tg-500);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.4s ease;
+}
+.notes-panel.open { max-height: 520px; }
+.notes-inner {
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.notes-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tg-300);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.global-notes-area {
+  width: 100%;
+  min-height: 145px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(61,220,132,0.2);
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.88);
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border 0.15s;
+  line-height: 1.65;
+}
+.global-notes-area::placeholder { color: rgba(255,255,255,0.25); }
+.global-notes-area:focus { border-color: var(--tg-500); }
+
+.global-task-add { display: flex; gap: 6px; margin-bottom: 10px; }
+.global-task-input {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(61,220,132,0.2);
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.88);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: border 0.15s;
+}
+.global-task-input::placeholder { color: rgba(255,255,255,0.25); }
+.global-task-input:focus { border-color: var(--tg-500); }
+.btn-global-add {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--tg-500);
+  color: #0a3020;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+.btn-global-add:hover { background: var(--tg-700); color: white; }
+.global-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 170px;
+  overflow-y: auto;
+}
+.global-task-list::-webkit-scrollbar { width: 4px; }
+.global-task-list::-webkit-scrollbar-thumb { background: rgba(61,220,132,0.3); border-radius: 4px; }
+.g-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.g-task-item.done { opacity: 0.45; }
+.g-task-toggle {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(61,220,132,0.5);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  color: transparent;
+  transition: all 0.15s;
+}
+.g-task-item.done .g-task-toggle { background: var(--tg-500); border-color: var(--tg-500); color: #0a3020; }
+.g-task-text { flex: 1; font-size: 12px; color: rgba(255,255,255,0.82); }
+.g-task-item.done .g-task-text { text-decoration: line-through; color: rgba(255,255,255,0.3); }
+.btn-g-del { background: none; border: none; color: rgba(255,255,255,0.18); cursor: pointer; font-size: 13px; transition: color 0.15s; padding: 0 2px; }
+.btn-g-del:hover { color: #EF9A9A; }
+.g-no-tasks { font-size: 11px; color: rgba(255,255,255,0.22); font-style: italic; padding: 6px 0; }
+
+/* ════════════════════════════════════════════
+   MAIN
+════════════════════════════════════════════ */
+main { max-width: 1300px; margin: 0 auto; padding: 28px 24px; }
+
+/* ════════════════════════════════════════════
+   STAT CARDS
+════════════════════════════════════════════ */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--t-surface);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--tp-700);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative; overflow: hidden;
+}
+.stat-card::after {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, transparent 60%, rgba(107,10,201,0.03));
+  pointer-events:none;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.stat-card.active-card   { border-color: var(--tp-700); }
+.stat-card.churned-card  { border-color: #C62828; }
+.stat-card.atrisk-card   { border-color: #E65100; }
+.stat-card.review-card   { border-color: var(--tg-700); }
+.stat-card.total-card    { border-color: var(--tp-300); }
+.stat-icon  { font-size: 26px; }
+.stat-num   { font-size: 28px; font-weight: 800; line-height: 1; color: var(--tp-800); }
+.stat-label { font-size: 11px; color: var(--t-muted); margin-top: 3px; }
+
+/* ════════════════════════════════════════════
+   TOOLBAR
+════════════════════════════════════════════ */
+.toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.filter-tabs {
+  display: flex;
+  background: var(--t-surface);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  box-shadow: var(--shadow-sm);
+  gap: 2px;
+}
+.filter-tab {
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--t-muted);
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.filter-tab.active { background: var(--tp-700); color: white; }
+.filter-tab:hover:not(.active) { background: var(--tp-50); color: var(--tp-700); }
+
+.search-box { flex: 1; min-width: 200px; position: relative; }
+.search-box input {
+  width: 100%;
+  padding: 9px 14px 9px 38px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--t-border);
+  font-size: 13px;
+  outline: none;
+  box-shadow: var(--shadow-sm);
+  background: var(--t-surface);
+  transition: border 0.15s;
+  font-family: inherit;
+}
+.search-box input:focus { border-color: var(--tp-500); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #ccc; font-size: 15px; }
+
+.view-toggle { display: flex; background: var(--t-surface); border-radius: var(--radius-sm); padding: 4px; box-shadow: var(--shadow-sm); gap: 2px; }
+.view-btn { padding: 7px 12px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 16px; color: #bbb; transition: all 0.15s; }
+.view-btn.active { background: var(--tp-700); color: white; }
+
+.results-info { font-size: 12px; color: var(--t-muted); margin-bottom: 14px; }
+
+/* ════════════════════════════════════════════
+   CARDS GRID
+════════════════════════════════════════════ */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.cards-grid.list-view { grid-template-columns: 1fr; }
+
+/* ════════════════════════════════════════════
+   RESTAURANT CARD
+════════════════════════════════════════════ */
+.resto-card {
+  background: var(--t-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border: 1.5px solid var(--t-border);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.resto-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.resto-card.churned { border-color: #FFCDD2; background: #FFFAFA; }
+
+.card-header {
+  padding: 14px 16px 12px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  border-bottom: 1px solid #F2ECFC;
+}
+.card-header-left { flex: 1; min-width: 0; }
+.resto-name {
+  font-size: 14px; font-weight: 700; color: var(--tp-900);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.resto-card.churned .resto-name { color: #C62828; }
+.resto-id { font-size: 10px; color: #bbb; margin-top: 3px; font-family: monospace; }
+
+/* Status badge */
+.status-wrap { position: relative; flex-shrink: 0; }
+.status-badge {
+  padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; user-select: none;
+  display: flex; align-items: center; gap: 4px;
+  transition: opacity 0.15s; border: none; font-family: inherit;
+}
+.status-badge:hover { opacity: 0.82; }
+.status-badge::after { content:' ▾'; font-size: 9px; opacity: 0.65; }
+.badge-Active   { background: var(--s-active-bg);   color: var(--s-active-fg); }
+.badge-Churned  { background: var(--s-churned-bg);  color: var(--s-churned-fg); }
+.badge-At-Risk  { background: var(--s-atrisk-bg);   color: var(--s-atrisk-fg); }
+.badge-Review   { background: var(--s-review-bg);   color: var(--s-review-fg); }
+.badge-Inactive { background: var(--s-inactive-bg); color: var(--s-inactive-fg); }
+.badge-New      { background: var(--s-new-bg);      color: var(--s-new-fg); }
+
+.status-dropdown {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: white; border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); border: 1px solid var(--t-border);
+  overflow: hidden; z-index: 50; min-width: 130px; display: none;
+}
+.status-dropdown.open { display: block; }
+.status-opt {
+  padding: 8px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background 0.1s;
+  display: flex; align-items: center; gap: 7px;
+}
+.status-opt:hover { background: var(--tp-50); }
+.opt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* Progress */
+.card-progress { padding: 12px 16px; border-bottom: 1px solid #F6F2FD; }
+.progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--t-muted); margin-bottom: 6px; }
+.progress-bar { height: 5px; background: var(--tp-100); border-radius: 99px; overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--tp-700), var(--tp-500));
+  transition: width 0.4s ease;
+}
+.checklist-dots { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+.chk-dot { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--t-muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot-true  { background: var(--tg-500); }
+.dot-false { background: #E0E0E0; }
+
+/* Actions */
+.card-actions { padding: 10px 16px; display: flex; gap: 8px; border-bottom: 1px solid #F6F2FD; }
+.btn-sop {
+  flex: 1; padding: 7px 10px; border-radius: var(--radius-sm);
+  border: none; background: var(--tp-700); color: white;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: background 0.15s; text-decoration: none; font-family: inherit;
+}
+.btn-sop:hover { background: var(--tp-800); }
+.btn-sop.no-link { background: #eee; color: #bbb; cursor: not-allowed; }
+.btn-tasks {
+  padding: 7px 12px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--t-border); background: transparent;
+  color: var(--tp-700); font-size: 12px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s; font-family: inherit;
+}
+.btn-tasks:hover { background: var(--tp-50); border-color: var(--tp-300); }
+.task-count-badge {
+  background: var(--tp-700); color: white;
+  border-radius: 99px; padding: 1px 7px; font-size: 10px; font-weight: 700;
+}
+
+/* Tasks panel */
+.tasks-panel { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; }
+.tasks-panel.open { max-height: 600px; padding: 12px 16px; }
+.task-add-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.task-input {
+  flex: 1; padding: 7px 10px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--t-border); font-size: 12px; outline: none;
+  background: var(--t-bg); font-family: inherit; transition: border 0.15s;
+}
+.task-input:focus { border-color: var(--tp-500); }
+.btn-add-task {
+  padding: 7px 13px; border-radius: var(--radius-sm); border: none;
+  background: var(--tp-700); color: white; font-size: 12px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: background 0.15s; font-family: inherit;
+}
+.btn-add-task:hover { background: var(--tp-800); }
+.task-list { display: flex; flex-direction: column; gap: 6px; }
+.task-item {
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+  background: var(--tp-50); border-radius: 7px; border: 1px solid var(--t-border);
+}
+.task-item.done { background: #F5F5F5; border-color: #eee; }
+.task-toggle {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--tp-300); background: transparent;
+  cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: transparent; transition: all 0.15s;
+}
+.task-item.done .task-toggle { background: var(--tg-500); border-color: var(--tg-500); color: #0a3020; }
+.task-text { flex: 1; font-size: 12px; color: #333; }
+.task-item.done .task-text { text-decoration: line-through; color: #bbb; }
+.task-date { font-size: 10px; color: #ccc; white-space: nowrap; }
+.btn-del-task { background: none; border: none; color: #ddd; cursor: pointer; font-size: 13px; padding: 0 2px; transition: color 0.15s; }
+.btn-del-task:hover { color: #C62828; }
+.no-tasks { font-size: 11px; color: #ccc; text-align: center; padding: 6px 0; font-style: italic; }
+
+/* List view */
+.list-view .resto-card { display: grid; grid-template-columns: 1fr auto; }
+.list-view .card-header { grid-column: 1; }
+.list-view .card-progress { display: none; }
+.list-view .card-actions { grid-column: 2; grid-row: 1; border-bottom: none; border-left: 1px solid #F2ECFC; align-items: center; }
+.list-view .tasks-panel { grid-column: 1 / -1; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: #ccc; grid-column: 1 / -1; }
+.empty-state span { font-size: 42px; display: block; margin-bottom: 12px; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: var(--tp-100); border-radius: 99px; }
+
+footer {
+  text-align: center; padding: 24px; font-size: 11px; color: #bbb;
+  border-top: 1px solid var(--t-border); margin-top: 32px;
+}
+
+@media (max-width: 700px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  header { padding: 0 16px; }
+  main { padding: 20px 14px; }
+  .notes-inner { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header>
+  <div class="header-left">
+
+    <!--
+      Tarro logo: "tarro" in purple, green accent dot above the "t"
+      Faithfully recreated from the brand asset.
+    -->
+    <a class="tarro-logo" href="https://www.tarro.com" target="_blank" rel="noopener" title="Tarro">
+      <svg viewBox="0 0 110 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Green accent dot above the "t" -->
+        <ellipse cx="10" cy="5.5" rx="4.5" ry="4.5" fill="#3DDC84"/>
+
+        <!-- t -->
+        <rect x="6.5" y="11" width="7" height="21" rx="3.5" fill="#6B0AC9"/>
+        <rect x="1"   y="16" width="18" height="5"  rx="2.5" fill="#6B0AC9"/>
+
+        <!-- a -->
+        <path d="M23 19.5c0-3.5 2.8-5.8 6.5-5.8s6.5 2.3 6.5 5.8v9.5h-4v-1.6c-.9 1.1-2.2 1.9-3.8 1.9-2.8 0-5.2-1.8-5.2-4.4 0-2.7 2.1-4.3 5.8-4.3h3v-.6c0-1.3-.9-2.2-2.2-2.2s-2.2.9-2.2 2.2h-4.4zm8.8 4.3h-2.1c-1.4 0-2.2.6-2.2 1.7 0 1 .8 1.7 2.1 1.7 1.6 0 2.2-1 2.2-2.7v-.7z" fill="#6B0AC9"/>
+
+        <!-- r (1st) -->
+        <path d="M39.5 14h4.2v2.3c.8-1.5 2.2-2.6 4.5-2.6v4.3c-2.8 0-4.5 1.4-4.5 4.6V29h-4.2V14z" fill="#6B0AC9"/>
+
+        <!-- r (2nd) -->
+        <path d="M50.5 14h4.2v2.3c.8-1.5 2.2-2.6 4.5-2.6v4.3c-2.8 0-4.5 1.4-4.5 4.6V29h-4.2V14z" fill="#6B0AC9"/>
+
+        <!-- o -->
+        <path d="M61 21.5c0-4.5 3.2-7.9 8-7.9s8 3.4 8 7.9-3.2 7.9-8 7.9-8-3.4-8-7.9zm4.2 0c0 2.4 1.6 4.1 3.8 4.1s3.8-1.7 3.8-4.1-1.6-4.1-3.8-4.1-3.8 1.7-3.8 4.1z" fill="#6B0AC9"/>
+      </svg>
+    </a>
+
+    <div class="logo-divider"></div>
+    <span class="logo-subtitle">🍕 SOP Dashboard</span>
+  </div>
+
+  <div class="header-right">
+    <div class="header-date" id="headerDate"></div>
+    <button class="btn-notes-toggle" onclick="toggleNotesPanel()">
+      📝 Notes &amp; Reminders
+    </button>
+  </div>
+</header>
+
+<!-- ════ NOTES PANEL ════ -->
+<div class="notes-panel" id="notesPanel">
+  <div class="notes-inner">
+    <div>
+      <div class="notes-section-title">📌 Overall Notes &amp; Reminders</div>
+      <textarea class="global-notes-area" id="globalNotes"
+        placeholder="Write team-wide notes, reminders, or anything important here…"
+        oninput="saveGlobalNotes()"></textarea>
+    </div>
+    <div>
+      <div class="notes-section-title">✅ Team Tasks</div>
+      <div class="global-task-add">
+        <input class="global-task-input" id="globalTaskInput" type="text"
+          placeholder="Add a team task or reminder…"
+          onkeydown="if(event.key==='Enter') addGlobalTask()" />
+        <button class="btn-global-add" onclick="addGlobalTask()">+ Add</button>
+      </div>
+      <div class="global-task-list" id="globalTaskList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MAIN ════ -->
+<main>
+
+  <!-- Stat cards -->
+  <div class="stats">
+    <div class="stat-card total-card"   onclick="setFilter('All')">
+      <div class="stat-icon">🏪</div>
+      <div><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total Restaurants</div></div>
+    </div>
+    <div class="stat-card active-card"  onclick="setFilter('Active')">
+      <div class="stat-icon">✅</div>
+      <div><div class="stat-num" id="stat-active">0</div><div class="stat-label">Active</div></div>
+    </div>
+    <div class="stat-card churned-card" onclick="setFilter('Churned')">
+      <div class="stat-icon">❌</div>
+      <div><div class="stat-num" id="stat-churned">0</div><div class="stat-label">Churned</div></div>
+    </div>
+    <div class="stat-card atrisk-card"  onclick="setFilter('At Risk')">
+      <div class="stat-icon">⚠️</div>
+      <div><div class="stat-num" id="stat-atrisk">0</div><div class="stat-label">At Risk</div></div>
+    </div>
+    <div class="stat-card review-card"  onclick="setFilter('Review')">
+      <div class="stat-icon">🔍</div>
+      <div><div class="stat-num" id="stat-review">0</div><div class="stat-label">Under Review</div></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="All"     onclick="setFilter('All')">All</button>
+      <button class="filter-tab"        data-filter="Active"  onclick="setFilter('Active')">Active</button>
+      <button class="filter-tab"        data-filter="Churned" onclick="setFilter('Churned')">Churned</button>
+      <button class="filter-tab"        data-filter="At Risk" onclick="setFilter('At Risk')">At Risk</button>
+      <button class="filter-tab"        data-filter="Review"  onclick="setFilter('Review')">Review</button>
+    </div>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by name or ID…" oninput="renderCards()" />
+    </div>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Grid">⊞</button>
+      <button class="view-btn"        id="btn-list" onclick="setView('list')" title="List">☰</button>
+    </div>
+  </div>
+
+  <div class="results-info" id="resultsInfo"></div>
+  <div class="cards-grid" id="cardsGrid"></div>
+</main>
+
+<footer>
+  Tarro SOP Dashboard &mdash; Data is stored locally in your browser.
+  Built for Wondersco &bull; <span id="footerYear"></span>
+</footer>
+
+<script>
+'use strict';
+
+/* ─── DATA ──────────────────────────────────────────────────────────── */
+const BASE_RESTAURANTS = [
+  {id:"R85135", name:"EDDIE'S",                     status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:0,dg:1},
+  {id:"R86887", name:"THE JADE EXPRESS",            status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:0,dg:1},
+  {id:"R87878", name:"PETE'S PIZZA - RIDGE AVE",    status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:1},
+  {id:"R87879", name:"PETE'S PIZZA - WOODLAND AVE", status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:1},
+  {id:"R87881", name:"PETE'S PIZZA - HAVERFORD AVE",status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:1},
+  {id:"R87882", name:"PETE'S PIZZA - WALNUT",       status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:1},
+  {id:"R87886", name:"PETE'S PIZZA - DELAWARE",     status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:1},
+  {id:"R87887", name:"PETE'S PIZZA DREXEL HILL",    status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:1},
+  {id:"R87883", name:"PETE'S PIZZA - LANCASTER",    status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:1},
+  {id:"R87885", name:"PETE'S PIZZA - 54TH ST",      status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:0},
+  {id:"R87888", name:"PETE'S PIZZA - TORRESDALE",   status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:0},
+  {id:"R89167", name:"Roseli",                      status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89316", name:"Bravo Pizza II",              status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89606", name:"Frank's Pizza",               status:"Review",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89617", name:"Today's Pizza",               status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89686", name:"Coffee Deli & Pizzeria",      status:"Active",  sop:"https://docs.google.com/spreadsheets/d/14DK4GPl_2b2SCfXsEdB99jSYjDMBOW9vRBMsFzLzvzs/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89695", name:"Chester Family Pizza",        status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89793", name:"Grandma CC's",                status:"Active",  sop:"https://docs.google.com/spreadsheets/d/17sISeZ6IIfiIfM0EWQldfW8_azq5V3wkvL4BMo3c_9Q/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:0,dg:0},
+  {id:"R89801", name:"Enzos Pizza",                 status:"Churned", sop:"https://docs.google.com/spreadsheets/d/15R9neVH1eDcfc0Kj5Wwv6o5nOtIumoiKJflpcjFXQU8/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89825", name:"Fiesta Pizza",                status:"At Risk", sop:"https://docs.google.com/spreadsheets/d/1DEXv7meRJ5SvlJFLEATAnaZP-EagBrDPqB-TcwzxtYo/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:0,dg:0},
+  {id:"R89829", name:"Pisa Pizza Sterling",         status:"Churned", sop:"https://docs.google.com/spreadsheets/d/1s6MhkFz9-o6xFiwe6SGoGYgLqXAkIZ4DGrL1VfhkhZk/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89852", name:"R Town",                      status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1wyGn8jjQMGV67ASjShL47yN5QA9OVZoawwoq9T8FEeE/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89861", name:"Camillo",                     status:"Churned", sop:"https://docs.google.com/spreadsheets/d/1OY6S1POYZKQREZCpP4R3whEHxyspXTBie7jRJTpAbRE/edit?usp=sharing",ml:1,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89877", name:"La Pizza Nostra",             status:"Churned", sop:"https://docs.google.com/spreadsheets/d/13S5donzF7QXw_QmFcTZ37CAAvlD86faCFVAcQ6OkQpY/edit?usp=sharing",ml:1,pd:1,ss:0,pa:0,as:0,dg:0},
+  {id:"R89885", name:"Pizza Famiglia",              status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1JVcq8xaHgIFZXtzb4jHvScTWFLOu5htHeMIO9aeROBQ/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89895", name:"Sciarrinos Pizzeria",         status:"Churned", sop:"https://docs.google.com/spreadsheets/d/1ssDj4SzBUlY_Gk1-y9WZqlb8QDlHOxbN8ZzsYLlSb-k/edit?usp=sharing",ml:1,pd:1,ss:0,pa:0,as:0,dg:0},
+  {id:"R89896", name:"Sorrentos Pizza",             status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1mPxDACOjp6vs1heCWBwexbEykxGmafLDiM0xxqvN2lE/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89917", name:"John's Place",                status:"At Risk", sop:"https://docs.google.com/spreadsheets/d/15NovjaG07yxedQAwXiZZ6sXZqbT5WpHJqH4et__sAmg/edit?usp=sharing",ml:0,pd:0,ss:0,pa:1,as:0,dg:0},
+  {id:"R89928", name:"Asad's Hot Chicken",          status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1sUX4KIqmEXDBlOcFjnuOfFQU4KvuB9gq6sBtHvjT4lI/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89938", name:"West Point Pizza",            status:"Active",  sop:"https://docs.google.com/spreadsheets/d/19qHd-QjT2FFIfkzW3FwSy_8YTzph5fb6F7iRn96IKmc/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89959", name:"Papa Nicks Pizza",            status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1teff8TbUCQn7tIWnM8D9cuk94wW1HfSfkhlrFRhmAoI/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89965", name:"Boston Bay Pizza",            status:"At Risk", sop:"https://docs.google.com/spreadsheets/d/1Q1p7TtFQNGrKYzAc3d7dWaeJRpiD8ohTtNpCW7AXcKE/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89968", name:"Holme Style Pizza",           status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1HTD-Yp3TOuUbD62CKIRNaWlI-1C8ZK-ChjU12HEZJiQ/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89988", name:"All Star Pizza",              status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1UFi8dwsKXL4h3LcxbBOIxlodfgN0oMCHnrn4JxI3_ls/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+];
+
+const CHK_LABELS = {ml:"Menu Live",pd:"Photos Done",ss:"Specials Setup",pa:"POS Active",as:"All Specials",dg:"Dish Group"};
+const CHK_KEYS   = ["ml","pd","ss","pa","as","dg"];
+
+const STATUS_OPTIONS = [
+  {value:"Active",   dot:"#6B0AC9"},
+  {value:"Churned",  dot:"#C62828"},
+  {value:"At Risk",  dot:"#E65100"},
+  {value:"Review",   dot:"#1EAA5C"},
+  {value:"Inactive", dot:"#455A64"},
+  {value:"New",      dot:"#3DDC84"},
+];
+
+/* ─── STATE ─────────────────────────────────────────────────────────── */
+let currentFilter  = "All";
+let currentView    = "grid";
+let notesPanelOpen = false;
+let openPanels     = new Set();
+let customStatuses = {};
+let restoTasks     = {};
+let globalTasks    = [];
+
+/* ─── STORAGE ────────────────────────────────────────────────────────── */
+function load() {
+  try {
+    customStatuses = JSON.parse(localStorage.getItem("tarro_statuses") || "{}");
+    restoTasks     = JSON.parse(localStorage.getItem("tarro_tasks")    || "{}");
+    globalTasks    = JSON.parse(localStorage.getItem("tarro_gtasks")   || "[]");
+    document.getElementById("globalNotes").value = localStorage.getItem("tarro_notes") || "";
+  } catch(e) {}
+}
+const saveStatuses    = () => localStorage.setItem("tarro_statuses", JSON.stringify(customStatuses));
+const saveRestoTasks  = () => localStorage.setItem("tarro_tasks",    JSON.stringify(restoTasks));
+const saveGlobalTasks = () => localStorage.setItem("tarro_gtasks",   JSON.stringify(globalTasks));
+const saveGlobalNotes = () => localStorage.setItem("tarro_notes",    document.getElementById("globalNotes").value);
+
+/* ─── HELPERS ────────────────────────────────────────────────────────── */
+const escHtml = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const fmtDate = iso => new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+function getRestaurants() {
+  return BASE_RESTAURANTS.map(r => ({...r, status: customStatuses[r.id] || r.status}));
+}
+function getProgress(r) {
+  const done = CHK_KEYS.filter(k => r[k]===1).length;
+  return {done, total:CHK_KEYS.length, pct: Math.round(done/CHK_KEYS.length*100)};
+}
+
+/* ─── NOTES PANEL ────────────────────────────────────────────────────── */
+function toggleNotesPanel() {
+  notesPanelOpen = !notesPanelOpen;
+  document.getElementById("notesPanel").classList.toggle("open", notesPanelOpen);
+}
+
+/* ─── GLOBAL TASKS ───────────────────────────────────────────────────── */
+function addGlobalTask() {
+  const inp = document.getElementById("globalTaskInput");
+  const text = (inp.value||"").trim();
+  if (!text) return;
+  globalTasks.push({id:Date.now().toString(), text, done:false, createdAt:new Date().toISOString()});
+  saveGlobalTasks(); inp.value=""; renderGlobalTasks();
+}
+function toggleGlobalTask(id) {
+  const t = globalTasks.find(x=>x.id===id);
+  if(t){t.done=!t.done; saveGlobalTasks(); renderGlobalTasks();}
+}
+function deleteGlobalTask(id) {
+  globalTasks = globalTasks.filter(x=>x.id!==id);
+  saveGlobalTasks(); renderGlobalTasks();
+}
+function renderGlobalTasks() {
+  const el = document.getElementById("globalTaskList");
+  if (!el) return;
+  if (!globalTasks.length) { el.innerHTML='<div class="g-no-tasks">No team tasks yet.</div>'; return; }
+  el.innerHTML = globalTasks.map(t=>`
+    <div class="g-task-item${t.done?' done':''}">
+      <button class="g-task-toggle" onclick="toggleGlobalTask('${t.id}')">${t.done?'✓':''}</button>
+      <span class="g-task-text">${escHtml(t.text)}</span>
+      <button class="btn-g-del" onclick="deleteGlobalTask('${t.id}')">✕</button>
+    </div>`).join('');
+}
+
+/* ─── STATUS ─────────────────────────────────────────────────────────── */
+function changeStatus(restoId, newStatus) {
+  customStatuses[restoId] = newStatus;
+  saveStatuses(); closeAllDropdowns(); renderCards(); updateStats();
+}
+function toggleStatusDropdown(restoId, event) {
+  event.stopPropagation();
+  const dd = document.getElementById(`dd-${restoId}`);
+  const wasOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!wasOpen) dd.classList.add('open');
+}
+function closeAllDropdowns() {
+  document.querySelectorAll('.status-dropdown.open').forEach(d=>d.classList.remove('open'));
+}
+document.addEventListener('click', closeAllDropdowns);
+
+/* ─── RESTAURANT TASKS ───────────────────────────────────────────────── */
+function addTask(restoId) {
+  const inp = document.getElementById(`inp-${restoId}`);
+  const text = (inp.value||"").trim();
+  if (!text) return;
+  if (!restoTasks[restoId]) restoTasks[restoId]=[];
+  restoTasks[restoId].push({id:Date.now().toString(), text, done:false, createdAt:new Date().toISOString()});
+  saveRestoTasks(); inp.value=""; renderTaskList(restoId); updateTaskBadge(restoId);
+}
+function toggleTask(restoId, taskId) {
+  const t = (restoTasks[restoId]||[]).find(x=>x.id===taskId);
+  if(t){t.done=!t.done; saveRestoTasks(); renderTaskList(restoId); updateTaskBadge(restoId);}
+}
+function deleteTask(restoId, taskId) {
+  if(!restoTasks[restoId]) return;
+  restoTasks[restoId] = restoTasks[restoId].filter(x=>x.id!==taskId);
+  saveRestoTasks(); renderTaskList(restoId); updateTaskBadge(restoId);
+}
+function renderTaskList(restoId) {
+  const el = document.getElementById(`tasklist-${restoId}`);
+  if (!el) return;
+  const list = restoTasks[restoId]||[];
+  if (!list.length){el.innerHTML='<div class="no-tasks">No tasks yet. Add one above!</div>'; return;}
+  el.innerHTML = list.map(t=>`
+    <div class="task-item${t.done?' done':''}">
+      <button class="task-toggle" onclick="toggleTask('${restoId}','${t.id}')">${t.done?'✓':''}</button>
+      <span class="task-text">${escHtml(t.text)}</span>
+      <span class="task-date">${fmtDate(t.createdAt)}</span>
+      <button class="btn-del-task" onclick="deleteTask('${restoId}','${t.id}')">✕</button>
+    </div>`).join('');
+}
+function updateTaskBadge(restoId) {
+  const badge = document.getElementById(`badge-${restoId}`);
+  if (!badge) return;
+  const list = restoTasks[restoId]||[];
+  const done = list.filter(t=>t.done).length;
+  badge.textContent = `${done}/${list.length}`;
+  badge.style.background = list.length===0?'#ccc': done===list.length&&list.length>0?'#3DDC84':'#6B0AC9';
+  badge.style.color = done===list.length&&list.length>0?'#0a3020':'white';
+}
+function togglePanel(restoId) {
+  const panel = document.getElementById(`panel-${restoId}`);
+  if (!panel) return;
+  const isOpen = openPanels.has(restoId);
+  if (isOpen){openPanels.delete(restoId); panel.classList.remove('open');}
+  else{openPanels.add(restoId); panel.classList.add('open'); renderTaskList(restoId); setTimeout(()=>document.getElementById(`inp-${restoId}`)?.focus(),310);}
+}
+const handleTaskKey = (e, id) => { if(e.key==='Enter') addTask(id); };
+
+/* ─── BUILD CARD ─────────────────────────────────────────────────────── */
+function buildCard(r) {
+  const prog  = getProgress(r);
+  const tasks = restoTasks[r.id]||[];
+  const tDone = tasks.filter(t=>t.done).length;
+  const status = customStatuses[r.id]||r.status;
+  const badgeCls = `badge-${status.replace(' ','-')}`;
+  const isChurn  = status==="Churned";
+  const isOpen   = openPanels.has(r.id);
+
+  const dots = CHK_KEYS.map(k=>`
+    <div class="chk-dot"><div class="dot dot-${r[k]===1?'true':'false'}"></div><span>${CHK_LABELS[k]}</span></div>`).join('');
+
+  const ddOpts = STATUS_OPTIONS.map(o=>`
+    <div class="status-opt" onclick="changeStatus('${r.id}','${o.value}')">
+      <div class="opt-dot" style="background:${o.dot}"></div>${o.value}
+    </div>`).join('');
+
+  const sopBtn = r.sop
+    ? `<a class="btn-sop" href="${escHtml(r.sop)}" target="_blank" rel="noopener">📄 View SOP</a>`
+    : `<button class="btn-sop no-link" disabled>📄 No SOP Link</button>`;
+
+  const taskHtml = tasks.length===0
+    ? '<div class="no-tasks">No tasks yet. Add one above!</div>'
+    : tasks.map(t=>`
+        <div class="task-item${t.done?' done':''}">
+          <button class="task-toggle" onclick="toggleTask('${r.id}','${t.id}')">${t.done?'✓':''}</button>
+          <span class="task-text">${escHtml(t.text)}</span>
+          <span class="task-date">${fmtDate(t.createdAt)}</span>
+          <button class="btn-del-task" onclick="deleteTask('${r.id}','${t.id}')">✕</button>
+        </div>`).join('');
+
+  return `
+  <div class="resto-card${isChurn?' churned':''}" id="card-${r.id}">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="resto-name" title="${escHtml(r.name)}">${escHtml(r.name)}</div>
+        <div class="resto-id">${r.id}</div>
+      </div>
+      <div class="status-wrap">
+        <button class="status-badge ${badgeCls}" onclick="toggleStatusDropdown('${r.id}',event)">${status}</button>
+        <div class="status-dropdown" id="dd-${r.id}" onclick="event.stopPropagation()">${ddOpts}</div>
+      </div>
+    </div>
+    <div class="card-progress">
+      <div class="progress-label"><span>SOP Checklist</span><span>${prog.done}/${prog.total} (${prog.pct}%)</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${prog.pct}%"></div></div>
+      <div class="checklist-dots">${dots}</div>
+    </div>
+    <div class="card-actions">
+      ${sopBtn}
+      <button class="btn-tasks" onclick="togglePanel('${r.id}')">
+        📋 Tasks <span class="task-count-badge" id="badge-${r.id}">${tDone}/${tasks.length}</span>
+      </button>
+    </div>
+    <div class="tasks-panel${isOpen?' open':''}" id="panel-${r.id}">
+      <div class="task-add-row">
+        <input class="task-input" id="inp-${r.id}" type="text"
+          placeholder="Add a task for ${escHtml(r.name)}…"
+          onkeydown="handleTaskKey(event,'${r.id}')" />
+        <button class="btn-add-task" onclick="addTask('${r.id}')">+ Add</button>
+      </div>
+      <div class="task-list" id="tasklist-${r.id}">${taskHtml}</div>
+    </div>
+  </div>`;
+}
+
+/* ─── FILTER & RENDER ────────────────────────────────────────────────── */
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.toggle('active',b.dataset.filter===f));
+  renderCards();
+}
+function setView(v) {
+  currentView = v;
+  document.getElementById('btn-grid').classList.toggle('active',v==='grid');
+  document.getElementById('btn-list').classList.toggle('active',v==='list');
+  document.getElementById('cardsGrid').classList.toggle('list-view',v==='list');
+  renderCards();
+}
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  return getRestaurants().filter(r => {
+    const matchF = currentFilter==="All" || r.status===currentFilter;
+    const matchS = !q || r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q);
+    return matchF && matchS;
+  });
+}
+function renderCards() {
+  const filtered = getFiltered();
+  const grid = document.getElementById('cardsGrid');
+  document.getElementById('resultsInfo').textContent = `Showing ${filtered.length} of ${BASE_RESTAURANTS.length} restaurants`;
+  grid.innerHTML = filtered.length
+    ? filtered.map(buildCard).join('')
+    : `<div class="empty-state"><span>🍕</span><p>No restaurants match your search.</p></div>`;
+}
+function updateStats() {
+  const all = getRestaurants();
+  document.getElementById('stat-total').textContent   = all.length;
+  document.getElementById('stat-active').textContent  = all.filter(r=>r.status==="Active").length;
+  document.getElementById('stat-churned').textContent = all.filter(r=>r.status==="Churned").length;
+  document.getElementById('stat-atrisk').textContent  = all.filter(r=>r.status==="At Risk").length;
+  document.getElementById('stat-review').textContent  = all.filter(r=>r.status==="Review").length;
+}
+
+/* ─── INIT ───────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('headerDate').textContent =
+    now.toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+  document.getElementById('footerYear').textContent = now.getFullYear();
+  load();
+  renderGlobalTasks();
+  updateStats();
+  renderCards();
+});
+</script>
+</body>
+</html>
