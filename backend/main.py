@@ -38,9 +38,12 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 DATA_DIR = Path(__file__).parent / "data"
-TASKS_FILE = DATA_DIR / "tasks.json"
-NOTES_FILE = DATA_DIR / "notes.json"
+TASKS_FILE  = DATA_DIR / "tasks.json"
+NOTES_FILE  = DATA_DIR / "notes.json"
 STATUS_FILE = DATA_DIR / "statuses.json"
+ORDER_FILE  = DATA_DIR / "order.json"
+PINS_FILE   = DATA_DIR / "pins.json"
+FLAGS_FILE  = DATA_DIR / "flags.json"
 
 
 def _read_json(path: Path, default):
@@ -68,6 +71,7 @@ class Task(BaseModel):
 
 class TaskCreate(BaseModel):
     text: str
+    due_date: Optional[str] = None  # ISO date string e.g. "2026-05-20"
 
 
 class NoteUpdate(BaseModel):
@@ -76,6 +80,10 @@ class NoteUpdate(BaseModel):
 
 class StatusUpdate(BaseModel):
     status: str
+
+
+class OrderUpdate(BaseModel):
+    order: list[str]
 
 
 class SearchResult(BaseModel):
@@ -165,7 +173,7 @@ def create_task(rid: str, body: TaskCreate):
     tasks = _read_json(TASKS_FILE, {})
     if rid not in tasks:
         tasks[rid] = []
-    new_task = {"id": str(uuid.uuid4()), "text": body.text, "done": False}
+    new_task = {"id": str(uuid.uuid4()), "text": body.text, "done": False, "due_date": body.due_date}
     tasks[rid].append(new_task)
     _write_json(TASKS_FILE, tasks)
     return new_task
@@ -211,6 +219,45 @@ def update_status(rid: str, body: StatusUpdate):
     statuses = _read_json(STATUS_FILE, {})
     statuses[rid] = body.status
     _write_json(STATUS_FILE, statuses)
+    return {"ok": True}
+
+
+# --- Card order ---
+
+@app.get("/api/order")
+def get_order():
+    return _read_json(ORDER_FILE, [])
+
+
+@app.post("/api/order")
+def save_order(body: OrderUpdate):
+    _write_json(ORDER_FILE, body.order)
+    return {"ok": True}
+
+
+# --- Pins ---
+
+@app.get("/api/pins")
+def get_pins():
+    return _read_json(PINS_FILE, [])
+
+
+@app.post("/api/pins")
+def save_pins(body: dict):
+    _write_json(PINS_FILE, body.get("pins", []))
+    return {"ok": True}
+
+
+# --- Flags ---
+
+@app.get("/api/flags")
+def get_flags():
+    return _read_json(FLAGS_FILE, [])
+
+
+@app.post("/api/flags")
+def save_flags(body: dict):
+    _write_json(FLAGS_FILE, body.get("flags", []))
     return {"ok": True}
 
 

@@ -9,8 +9,10 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [tasks, setTasks] = useState([]);
-  const [newTask, setNewTask] = useState("");
+  const [tasks, setTasks]         = useState([]);
+  const [newTask, setNewTask]     = useState("");
+  const [dueDate, setDueDate]     = useState("");
+  const [claudeCopied, setClaudeCopied] = useState(false);
   const inputRef = useRef(null);
 
   // Load tasks on mount
@@ -45,11 +47,32 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
     if (e.key === "Enter") handleSearch();
   };
 
+  const handleAskClaude = () => {
+    const lines = [
+      `I'm looking at a restaurant called "${restaurant.name}" (ID: ${restaurant.id}).`,
+      restaurant.slack_channel
+        ? `Their Slack channel is #${restaurant.slack_channel}.`
+        : "",
+      query.trim()
+        ? `Please search for anything related to: "${query.trim()}".`
+        : "Please give me a summary of any recent issues or activity.",
+      "",
+      "Search the Slack channel and Intercom conversations for relevant context and give me a clear summary of what you find.",
+    ].filter((l) => l !== undefined);
+
+    const prompt = lines.join("\n");
+    navigator.clipboard.writeText(prompt).catch(() => {});
+    window.open("https://claude.ai", "_blank");
+    setClaudeCopied(true);
+    setTimeout(() => setClaudeCopied(false), 3000);
+  };
+
   const handleAddTask = async () => {
     if (!newTask.trim()) return;
-    const task = await api.createTask(restaurant.id, newTask.trim());
+    const task = await api.createTask(restaurant.id, newTask.trim(), dueDate || null);
     setTasks((prev) => [...prev, task]);
     setNewTask("");
+    setDueDate("");
   };
 
   const handleToggleTask = async (taskId) => {
@@ -100,6 +123,7 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
           {/* Search row */}
           <div>
             <div className="modal-search-row">
+
               <input
                 ref={inputRef}
                 className="modal-search-input"
@@ -125,6 +149,16 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
                 disabled={searching || !query.trim()}
               >
                 {searching ? "…" : "Search"}
+              </button>
+            </div>
+
+            {/* Ask Claude row */}
+            <div className="ask-claude-row">
+              <span className="ask-claude-label">
+                No tokens connected?
+              </span>
+              <button className="ask-claude-btn" onClick={handleAskClaude}>
+                {claudeCopied ? "✓ Prompt copied! Paste it in Claude →" : "Ask Claude instead →"}
               </button>
             </div>
           </div>
@@ -188,30 +222,22 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleAddTask(); }}
               />
+              <input
+                type="date"
+                className="task-date-input"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                title="Due date (optional)"
+              />
               <button className="task-add-btn" onClick={handleAddTask}>+ Add</button>
             </div>
             {tasks.map((task) => (
-              <div key={task.id} className="task-item">
-                <input
-                  type="checkbox"
-                  checked={task.done}
-                  onChange={() => handleToggleTask(task.id)}
-                  id={`task-${task.id}`}
-                />
-                <label
-                  htmlFor={`task-${task.id}`}
-                  className={task.done ? "done" : ""}
-                >
-                  {task.text}
-                </label>
-                <button
-                  className="task-delete-btn"
-                  onClick={() => handleDeleteTask(task.id)}
-                  title="Remove task"
-                >
-                  ✕
-                </button>
-              </div>
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={() => handleToggleTask(task.id)}
+                onDelete={() => handleDeleteTask(task.id)}
+              />
             ))}
             {tasks.length === 0 && (
               <div style={{ fontSize: 13, color: "var(--text-sec)", padding: "6px 2px" }}>
@@ -221,6 +247,36 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TaskItem({ task, onToggle, onDelete }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const overdue = task.due_date && !task.done && task.due_date < today;
+  const dueText = task.due_date
+    ? (overdue ? `⚠ Overdue: ${task.due_date}` : `Due: ${task.due_date}`)
+    : null;
+
+  return (
+    <div className={`task-item${overdue ? " overdue" : ""}`}>
+      <input
+        type="checkbox"
+        checked={task.done}
+        onChange={onToggle}
+        id={`task-${task.id}`}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <label htmlFor={`task-${task.id}`} className={task.done ? "done" : ""}>
+          {task.text}
+        </label>
+        {dueText && (
+          <div className={`task-due${overdue ? " task-due-overdue" : ""}`}>
+            {dueText}
+          </div>
+        )}
+      </div>
+      <button className="task-delete-btn" onClick={onDelete} title="Remove task">✕</button>
     </div>
   );
 }

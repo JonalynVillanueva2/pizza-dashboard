@@ -11,25 +11,25 @@ async function request(path, options = {}) {
 
 export const api = {
   getRestaurants: () => request("/api/restaurants"),
-  getConfig: () => request("/api/config"),
+  getConfig:      () => request("/api/config"),
 
   search: (rid, q, sources = "all") =>
     request(`/api/search/${rid}?q=${encodeURIComponent(q)}&sources=${sources}`),
 
   getTasks: (rid) => request(`/api/tasks/${rid}`),
-  createTask: (rid, text) =>
+  createTask: (rid, text, due_date = null) =>
     request(`/api/tasks/${rid}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, due_date }),
     }),
   toggleTask: (rid, taskId) =>
     request(`/api/tasks/${rid}/${taskId}`, { method: "PATCH" }),
   deleteTask: (rid, taskId) =>
     request(`/api/tasks/${rid}/${taskId}`, { method: "DELETE" }),
 
-  getNotes: () => request("/api/notes"),
-  saveNotes: (content) =>
+  getNotes:   () => request("/api/notes"),
+  saveNotes:  (content) =>
     request("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -41,5 +41,29 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
+    }),
+
+  getOrder:  () => request("/api/order"),
+  saveOrder: (order) =>
+    request("/api/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order }),
+    }),
+
+  getPins:   () => request("/api/pins"),
+  savePins:  (pins) =>
+    request("/api/pins", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pins }),
+    }),
+
+  getFlags:  () => request("/api/flags"),
+  saveFlags: (flags) =>
+    request("/api/flags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flags }),
     }),
 };
