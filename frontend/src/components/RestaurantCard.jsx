@@ -79,6 +79,14 @@ export default function RestaurantCard({
           <button className="btn-sop no-link compact-sop" disabled onClick={(e) => e.stopPropagation()}>📄 No SOP</button>
         )}
 
+        <a
+          href={`https://greendot.prod.letsdowonders.io/greendot/restaurant/${restaurant.id}`}
+          target="_blank" rel="noreferrer"
+          className="btn-gd compact-gd"
+          onClick={(e) => e.stopPropagation()}
+          title="Open in Green Dot"
+        >🟢 GD</a>
+
         <button className="compact-open-btn" onClick={(e) => stopAndRun(e, () => onSelect(restaurant))}>
           Open →
         </button>
@@ -151,6 +159,18 @@ export default function RestaurantCard({
             📄 No SOP Link
           </button>
         )}
+
+        {/* Green Dot link */}
+        <a
+          href={`https://greendot.prod.letsdowonders.io/greendot/restaurant/${restaurant.id}`}
+          target="_blank"
+          rel="noreferrer"
+          className="btn-gd"
+          onClick={(e) => e.stopPropagation()}
+          title="Open in Green Dot"
+        >
+          🟢 GD
+        </a>
 
         <button className="btn-tasks" onClick={(e) => stopAndRun(e, () => onSelect(restaurant))}>
           📋 Tasks <span className="task-count-badge">{totalCount}</span>

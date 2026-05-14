@@ -318,6 +318,27 @@ body {
 .btn-sop.no-link  { background: #eee; color: #bbb; cursor: not-allowed; }
 .btn-sop.compact-sop { flex: none; margin: 0; padding: 4px 10px; font-size: 11px; }
 
+/* Green Dot button */
+.btn-gd {
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.btn-gd:hover { background: #dcfce7; border-color: #86efac; color: #166534; }
+.btn-gd.compact-gd { padding: 4px 10px; font-size: 11px; flex-shrink: 0; }
+
 /* Tasks button */
 .btn-tasks {
   padding: 7px 12px; border-radius: var(--radius-sm);
