@@ -1,9 +1,8 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "pip install -r backend/requirements.txt && cd frontend && npm install && npm run build"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/api/restaurants"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
