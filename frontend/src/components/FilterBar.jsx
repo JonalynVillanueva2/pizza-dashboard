@@ -5,19 +5,13 @@ export default function FilterBar({
   onExport,
 }) {
   return (
-    <div className="controls-wrapper">
-      <div className="controls">
-        <input
-          className="search-box"
-          type="text"
-          placeholder="Search restaurants…"
-          value={search}
-          onChange={(e) => onSearch(e.target.value)}
-        />
+    <div className="toolbar">
+      {/* Filter tabs — grouped in white pill container */}
+      <div className="filter-tabs">
         {filters.map((f) => (
           <button
             key={f}
-            className={`filter-btn${active === f ? " active" : ""}`}
+            className={`filter-tab${active === f ? " active" : ""}`}
             onClick={() => onChange(f)}
           >
             {f}
@@ -25,30 +19,35 @@ export default function FilterBar({
         ))}
       </div>
 
-      <div className="controls-right">
-        {/* View mode toggle */}
-        <div className="view-toggle">
-          <button
-            className={viewMode === "grid" ? "active" : ""}
-            onClick={() => onViewModeChange("grid")}
-            title="Grid view"
-          >
-            ⊞ Grid
-          </button>
-          <button
-            className={viewMode === "list" ? "active" : ""}
-            onClick={() => onViewModeChange("list")}
-            title="Compact list view"
-          >
-            ☰ List
-          </button>
-        </div>
-
-        {/* Export */}
-        <button className="export-btn" onClick={onExport} title="Export to CSV">
-          ↓ Export CSV
-        </button>
+      {/* Search box */}
+      <div className="search-box">
+        <span className="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Search by name or ID…"
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+        />
       </div>
+
+      {/* View toggle */}
+      <div className="view-toggle">
+        <button
+          className={`view-btn${viewMode === "grid" ? " active" : ""}`}
+          onClick={() => onViewModeChange("grid")}
+          title="Grid view"
+        >⊞</button>
+        <button
+          className={`view-btn${viewMode === "list" ? " active" : ""}`}
+          onClick={() => onViewModeChange("list")}
+          title="List view"
+        >☰</button>
+      </div>
+
+      {/* Export */}
+      <button className="export-btn" onClick={onExport} title="Export to CSV">
+        ↓ Export CSV
+      </button>
     </div>
   );
 }

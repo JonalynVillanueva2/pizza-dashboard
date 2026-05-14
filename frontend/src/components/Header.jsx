@@ -1,3 +1,6 @@
+import tarroLogo from '../tarro logo.png';
+import tarroWhiteLogo from '../tarro white logo.png';
+
 export default function Header() {
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "short",
@@ -11,21 +14,14 @@ export default function Header() {
       <div className="logo-group">
         {/* Tarro logo: overlapping leaf shapes + wordmark */}
         <div className="logo-icon">
-          <svg width="44" height="36" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Back leaf */}
-            <rect x="4" y="2" width="14" height="19" rx="7" fill="#0FB888"
-              transform="rotate(-20 11 11)" />
-            {/* Front leaf */}
-            <rect x="8" y="1" width="14" height="19" rx="7" fill="#1DE9B6"
-              transform="rotate(15 15 10)" />
-            {/* wordmark "tarro" */}
-            <text x="26" y="23" fontFamily="-apple-system, sans-serif" fontWeight="800"
-              fontSize="13" fill="#7326D3">tarro</text>
-          </svg>
+          <a className="tarro-logo" href="https://www.tarro.com" target="_blank" rel="noopener" title="Tarro">
+            <img src={tarroWhiteLogo} alt="Tarro logo" className="tarro-img" />
+          </a>
         </div>
+        <div className="logo-divider"></div>
         <div className="logo-text">
-          <span className="logo-title">Pizza Dashboard</span>
-          <span className="logo-subtitle">Restaurant Operations</span>
+          <span className="logo-title">🍕 Pizza Dashboard</span>
+        
         </div>
       </div>
       <span className="header-date">{today}</span>

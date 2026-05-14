@@ -48,7 +48,7 @@ export default function RestaurantGrid({
       {!compact && (
         <div className="drag-hint">☰ Drag cards to reorder</div>
       )}
-      <div className={`restaurant-grid${compact ? " compact" : ""}`}>
+      <div className={`cards-grid${compact ? " compact" : ""}`}>
         {restaurants.map((r) => (
           <RestaurantCard
             key={r.id}

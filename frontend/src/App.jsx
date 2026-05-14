@@ -157,7 +157,7 @@ export default function App() {
     <>
       <Header />
       <div className="app-body">
-        <StatsBar restaurants={restaurants} />
+        <StatsBar restaurants={restaurants} onFilter={setFilter} />
         <NotesPanel notes={notes} onSave={handleSaveNotes} />
         <FilterBar
           filters={FILTERS}
