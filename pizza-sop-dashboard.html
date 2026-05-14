@@ -6,26 +6,26 @@
 <title>Pizza Restaurants – Tarro SOP Dashboard</title>
 <style>
 /* ═══════════════════════════════════════════════
-   TARRO BRAND PALETTE
-   Purple: #6B0AC9  |  Green: #3DDC84
+   TARRO BRAND PALETTE  (from official logo)
+   Purple: #7326D3  |  Mint: #1DE9B6
 ═══════════════════════════════════════════════ */
 :root {
-  /* Tarro Purple */
+  /* Tarro Purple — exact brand colour */
   --tp-900:  #3A0070;
-  --tp-800:  #52009E;
-  --tp-700:  #6B0AC9;   /* PRIMARY */
-  --tp-600:  #7C24D4;
-  --tp-500:  #9147E0;
-  --tp-300:  #B78EEE;
+  --tp-800:  #5A18B0;
+  --tp-700:  #7326D3;   /* PRIMARY — official Tarro purple */
+  --tp-600:  #8535E0;
+  --tp-500:  #9B55E8;
+  --tp-300:  #C49AF2;
   --tp-100:  #EDE1FB;
   --tp-50:   #F7F1FE;
 
-  /* Tarro Green */
-  --tg-700:  #1EAA5C;
-  --tg-500:  #3DDC84;   /* ACCENT */
-  --tg-300:  #7DEDB0;
-  --tg-100:  #D4F7E6;
-  --tg-50:   #EDFBF4;
+  /* Tarro Mint Green — exact brand accent */
+  --tg-700:  #0FB888;
+  --tg-500:  #1DE9B6;   /* ACCENT — official Tarro mint */
+  --tg-300:  #6FF3D2;
+  --tg-100:  #C8FBF0;
+  --tg-50:   #EDFBF7;
 
   /* Neutrals */
   --t-dark:      #18013A;   /* near-black with purple tint */
@@ -37,7 +37,7 @@
   --t-bg:        #FAF8FE;   /* very faint purple tint */
 
   /* Status colours */
-  --s-active-bg:  #EDE1FB; --s-active-fg:  #52009E;
+  --s-active-bg:  #EDE1FB; --s-active-fg:  #7326D3;
   --s-churned-bg: #FFEBEE; --s-churned-fg: #C62828;
   --s-atrisk-bg:  #FFF8E1; --s-atrisk-fg:  #E65100;
   --s-review-bg:  #E0F2F1; --s-review-fg:  #00695C;
@@ -85,6 +85,7 @@ header {
   gap: 0;
 }
 .tarro-logo svg { height: 30px; width: auto; }
+.tarro-logo img { height: 30px; width: auto; display: block; }
 
 .logo-divider {
   width: 1px; height: 28px;
@@ -94,18 +95,18 @@ header {
 .logo-subtitle {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,0.6);
+  color: #FFFFFF;
   letter-spacing: 0.2px;
 }
 
 .header-right { display: flex; align-items: center; gap: 12px; }
-.header-date  { font-size: 11px; color: rgba(255,255,255,0.4); text-align: right; }
+.header-date  { font-size: 11px; color: rgba(255,255,255,0.88); text-align: right; }
 
 .btn-notes-toggle {
   padding: 7px 16px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid rgba(61,220,132,0.4);
-  background: rgba(61,220,132,0.1);
+  border: 1.5px solid rgba(29,233,182,0.45);
+  background: rgba(29,233,182,0.1);
   color: var(--tg-300);
   font-size: 12px;
   font-weight: 600;
@@ -117,7 +118,7 @@ header {
   font-family: inherit;
 }
 .btn-notes-toggle:hover {
-  background: rgba(61,220,132,0.2);
+  background: rgba(29,233,182,0.22);
   border-color: var(--tg-500);
   color: white;
 }
@@ -500,31 +501,12 @@ footer {
   <div class="header-left">
 
     <!--
-      Tarro logo: "tarro" in purple, green accent dot above the "t"
-      Faithfully recreated from the brand asset.
+      Tarro logo — accurate SVG recreation from official brand asset.
+      Purple #7326D3 wordmark + two overlapping mint-green leaf shapes above the "t".
     -->
-    <a class="tarro-logo" href="https://www.tarro.com" target="_blank" rel="noopener" title="Tarro">
-      <svg viewBox="0 0 110 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Green accent dot above the "t" -->
-        <ellipse cx="10" cy="5.5" rx="4.5" ry="4.5" fill="#3DDC84"/>
-
-        <!-- t -->
-        <rect x="6.5" y="11" width="7" height="21" rx="3.5" fill="#6B0AC9"/>
-        <rect x="1"   y="16" width="18" height="5"  rx="2.5" fill="#6B0AC9"/>
-
-        <!-- a -->
-        <path d="M23 19.5c0-3.5 2.8-5.8 6.5-5.8s6.5 2.3 6.5 5.8v9.5h-4v-1.6c-.9 1.1-2.2 1.9-3.8 1.9-2.8 0-5.2-1.8-5.2-4.4 0-2.7 2.1-4.3 5.8-4.3h3v-.6c0-1.3-.9-2.2-2.2-2.2s-2.2.9-2.2 2.2h-4.4zm8.8 4.3h-2.1c-1.4 0-2.2.6-2.2 1.7 0 1 .8 1.7 2.1 1.7 1.6 0 2.2-1 2.2-2.7v-.7z" fill="#6B0AC9"/>
-
-        <!-- r (1st) -->
-        <path d="M39.5 14h4.2v2.3c.8-1.5 2.2-2.6 4.5-2.6v4.3c-2.8 0-4.5 1.4-4.5 4.6V29h-4.2V14z" fill="#6B0AC9"/>
-
-        <!-- r (2nd) -->
-        <path d="M50.5 14h4.2v2.3c.8-1.5 2.2-2.6 4.5-2.6v4.3c-2.8 0-4.5 1.4-4.5 4.6V29h-4.2V14z" fill="#6B0AC9"/>
-
-        <!-- o -->
-        <path d="M61 21.5c0-4.5 3.2-7.9 8-7.9s8 3.4 8 7.9-3.2 7.9-8 7.9-8-3.4-8-7.9zm4.2 0c0 2.4 1.6 4.1 3.8 4.1s3.8-1.7 3.8-4.1-1.6-4.1-3.8-4.1-3.8 1.7-3.8 4.1z" fill="#6B0AC9"/>
-      </svg>
-    </a>
+        <a class="tarro-logo" href="https://www.tarro.com" target="_blank" rel="noopener" title="Tarro">
+      <img src="resources/tarro%20logo.png" alt="Tarro logo" class="tarro-img" />
+        </a>
 
     <div class="logo-divider"></div>
     <span class="logo-subtitle">🍕 SOP Dashboard</span>
