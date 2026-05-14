@@ -84,8 +84,8 @@ header {
   text-decoration: none;
   gap: 0;
 }
-.tarro-logo svg { height: 30px; width: auto; }
-.tarro-logo img { height: 30px; width: auto; display: block; }
+.tarro-logo svg { height: 70px; width: auto; }
+.tarro-logo img { height: 70px; width: auto; display: block; }
 
 .logo-divider {
   width: 1px; height: 28px;
@@ -615,10 +615,10 @@ const BASE_RESTAURANTS = [
   {id:"R87888", name:"PETE'S PIZZA - TORRESDALE",   status:"Active",  sop:"",ml:1,pd:1,ss:1,pa:1,as:1,dg:0},
   {id:"R89167", name:"Roseli",                      status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
   {id:"R89316", name:"Bravo Pizza II",              status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
-  {id:"R89606", name:"Frank's Pizza",               status:"Review",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89606", name:"Frank's Pizza",               status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
   {id:"R89617", name:"Today's Pizza",               status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
   {id:"R89686", name:"Coffee Deli & Pizzeria",      status:"Active",  sop:"https://docs.google.com/spreadsheets/d/14DK4GPl_2b2SCfXsEdB99jSYjDMBOW9vRBMsFzLzvzs/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
-  {id:"R89695", name:"Chester Family Pizza",        status:"Active",  sop:"",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89695", name:"Chester Family Pizza",        status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1RuiDjXHmSCKPVE_l3CqCn7qaiC71NPL2uvC12zPnY9g/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
   {id:"R89793", name:"Grandma CC's",                status:"Active",  sop:"https://docs.google.com/spreadsheets/d/17sISeZ6IIfiIfM0EWQldfW8_azq5V3wkvL4BMo3c_9Q/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:0,dg:0},
   {id:"R89801", name:"Enzos Pizza",                 status:"Churned", sop:"https://docs.google.com/spreadsheets/d/15R9neVH1eDcfc0Kj5Wwv6o5nOtIumoiKJflpcjFXQU8/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
   {id:"R89825", name:"Fiesta Pizza",                status:"At Risk", sop:"https://docs.google.com/spreadsheets/d/1DEXv7meRJ5SvlJFLEATAnaZP-EagBrDPqB-TcwzxtYo/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:0,dg:0},
@@ -628,13 +628,13 @@ const BASE_RESTAURANTS = [
   {id:"R89877", name:"La Pizza Nostra",             status:"Churned", sop:"https://docs.google.com/spreadsheets/d/13S5donzF7QXw_QmFcTZ37CAAvlD86faCFVAcQ6OkQpY/edit?usp=sharing",ml:1,pd:1,ss:0,pa:0,as:0,dg:0},
   {id:"R89885", name:"Pizza Famiglia",              status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1JVcq8xaHgIFZXtzb4jHvScTWFLOu5htHeMIO9aeROBQ/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
   {id:"R89895", name:"Sciarrinos Pizzeria",         status:"Churned", sop:"https://docs.google.com/spreadsheets/d/1ssDj4SzBUlY_Gk1-y9WZqlb8QDlHOxbN8ZzsYLlSb-k/edit?usp=sharing",ml:1,pd:1,ss:0,pa:0,as:0,dg:0},
-  {id:"R89896", name:"Sorrentos Pizza",             status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1mPxDACOjp6vs1heCWBwexbEykxGmafLDiM0xxqvN2lE/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
+  {id:"R89896", name:"Sorrentos Pizza",             status:"Churned", sop:"https://docs.google.com/spreadsheets/d/1mPxDACOjp6vs1heCWBwexbEykxGmafLDiM0xxqvN2lE/edit?usp=sharing",ml:1,pd:1,ss:0,pa:1,as:1,dg:0},
   {id:"R89917", name:"John's Place",                status:"At Risk", sop:"https://docs.google.com/spreadsheets/d/15NovjaG07yxedQAwXiZZ6sXZqbT5WpHJqH4et__sAmg/edit?usp=sharing",ml:0,pd:0,ss:0,pa:1,as:0,dg:0},
   {id:"R89928", name:"Asad's Hot Chicken",          status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1sUX4KIqmEXDBlOcFjnuOfFQU4KvuB9gq6sBtHvjT4lI/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
   {id:"R89938", name:"West Point Pizza",            status:"Active",  sop:"https://docs.google.com/spreadsheets/d/19qHd-QjT2FFIfkzW3FwSy_8YTzph5fb6F7iRn96IKmc/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
   {id:"R89959", name:"Papa Nicks Pizza",            status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1teff8TbUCQn7tIWnM8D9cuk94wW1HfSfkhlrFRhmAoI/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
   {id:"R89965", name:"Boston Bay Pizza",            status:"At Risk", sop:"https://docs.google.com/spreadsheets/d/1Q1p7TtFQNGrKYzAc3d7dWaeJRpiD8ohTtNpCW7AXcKE/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
-  {id:"R89968", name:"Holme Style Pizza",           status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1HTD-Yp3TOuUbD62CKIRNaWlI-1C8ZK-ChjU12HEZJiQ/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
+  {id:"R89968", name:"Holme Style Pizza",           status:"Churned", sop:"https://docs.google.com/spreadsheets/d/1HTD-Yp3TOuUbD62CKIRNaWlI-1C8ZK-ChjU12HEZJiQ/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
   {id:"R89988", name:"All Star Pizza",              status:"Active",  sop:"https://docs.google.com/spreadsheets/d/1UFi8dwsKXL4h3LcxbBOIxlodfgN0oMCHnrn4JxI3_ls/edit?usp=sharing",ml:0,pd:0,ss:0,pa:0,as:0,dg:0},
 ];
 
