@@ -17,6 +17,14 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
+  updateRestaurant: (rid, data) =>
+    request(`/api/restaurants/${rid}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+  deleteRestaurant: (rid) =>
+    request(`/api/restaurants/${rid}`, { method: "DELETE" }),
   getConfig:      () => request("/api/config"),
 
   search: (rid, q, sources = "all") =>
@@ -32,6 +40,12 @@ export const api = {
     }),
   toggleTask: (rid, taskId) =>
     request(`/api/tasks/${rid}/${taskId}`, { method: "PATCH" }),
+  updateTask: (rid, taskId, data) =>
+    request(`/api/tasks/${rid}/${taskId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
   deleteTask: (rid, taskId) =>
     request(`/api/tasks/${rid}/${taskId}`, { method: "DELETE" }),
 
@@ -50,13 +64,14 @@ export const api = {
       body: JSON.stringify({ status }),
     }),
 
-  getOrder:  () => request("/api/order"),
-  saveOrder: (order) =>
+  getOrder:   () => request("/api/order"),
+  saveOrder:  (order) =>
     request("/api/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ order }),
     }),
+  resetOrder: () => request("/api/order/reset", { method: "POST" }),
 
   getPins:   () => request("/api/pins"),
   savePins:  (pins) =>

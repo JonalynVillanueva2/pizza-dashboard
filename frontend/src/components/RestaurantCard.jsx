@@ -16,6 +16,7 @@ export default function RestaurantCard({
   pinned, flagged, compact,
   onSelect, onStatusChange,
   onTogglePin, onToggleFlag,
+  onEdit,
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
 }) {
@@ -56,6 +57,8 @@ export default function RestaurantCard({
           onClick={(e) => stopAndRun(e, () => onTogglePin(restaurant.id))} title={pinned ? "Unpin" : "Pin"}>★</button>
         <button className={`icon-btn flag-btn${flagged ? " on" : ""}`}
           onClick={(e) => stopAndRun(e, () => onToggleFlag(restaurant.id))} title="Flag urgent">🚨</button>
+        <button className="icon-btn edit-btn"
+          onClick={(e) => stopAndRun(e, () => onEdit(restaurant))} title="Edit restaurant">✏</button>
 
         <span className="compact-name">{restaurant.name}</span>
         <span className="compact-id">{restaurant.id}</span>
@@ -176,11 +179,13 @@ export default function RestaurantCard({
           📋 Tasks <span className="task-count-badge">{totalCount}</span>
         </button>
 
-        {/* Pin & flag */}
+        {/* Pin, flag, edit */}
         <button className={`icon-btn pin-btn${pinned ? " on" : ""}`}
           onClick={(e) => stopAndRun(e, () => onTogglePin(restaurant.id))} title={pinned ? "Unpin" : "Pin"}>★</button>
         <button className={`icon-btn flag-btn${flagged ? " on" : ""}`}
           onClick={(e) => stopAndRun(e, () => onToggleFlag(restaurant.id))} title="Flag urgent">🚨</button>
+        <button className="icon-btn edit-btn"
+          onClick={(e) => stopAndRun(e, () => onEdit(restaurant))} title="Edit restaurant">✏</button>
       </div>
     </div>
   );

@@ -165,7 +165,19 @@ class RestaurantCreate(BaseModel):
     sop: Optional[str] = None
 
 
+class RestaurantUpdate(BaseModel):
+    name: str
+    status: str
+    slack_channel: Optional[str] = None
+    sop: Optional[str] = None
+
+
 class TaskCreate(BaseModel):
+    text: str
+    due_date: Optional[str] = None
+
+
+class TaskUpdate(BaseModel):
     text: str
     due_date: Optional[str] = None
 
@@ -241,6 +253,39 @@ def create_restaurant(body: RestaurantCreate):
     return {"id": body.id, "name": body.name, "status": body.status,
             "slack_channel": body.slack_channel or "",
             "sop": body.sop or ""}
+
+
+@app.put("/api/restaurants/{rid}")
+def update_restaurant(rid: str, body: RestaurantUpdate):
+    """Edit an existing restaurant's details (name, status, slack, sop)."""
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE restaurants
+                SET name = %s, status = %s, slack_channel = %s, sop = %s
+                WHERE id = %s
+            """, (
+                body.name.strip(),
+                body.status,
+                body.slack_channel.strip() if body.slack_channel else None,
+                body.sop.strip() if body.sop else None,
+                rid,
+            ))
+    return {"ok": True}
+
+
+@app.delete("/api/restaurants/{rid}")
+def delete_restaurant(rid: str):
+    """Delete a restaurant and all its tasks."""
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM tasks WHERE restaurant_id = %s", (rid,))
+            cur.execute("DELETE FROM restaurants WHERE id = %s", (rid,))
+    # Also remove from order, pins, flags in kv_store
+    for key in ("order", "pins", "flags"):
+        data = kv_get(key, [] if key != "order" else [])
+        kv_set(key, [x for x in data if x != rid])
+    return {"ok": True}
 
 
 @app.get("/api/config")
@@ -343,6 +388,22 @@ def toggle_task(rid: str, task_id: str):
     return _row_to_task(row)
 
 
+@app.put("/api/tasks/{rid}/{task_id}")
+def update_task(rid: str, task_id: str, body: TaskUpdate):
+    """Edit a task's text and/or due date."""
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE tasks SET text = %s, due_date = %s
+                WHERE id = %s AND restaurant_id = %s
+                RETURNING id, restaurant_id, text, done, due_date
+            """, (body.text.strip(), body.due_date or None, task_id, rid))
+            row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return _row_to_task(row)
+
+
 @app.delete("/api/tasks/{rid}/{task_id}")
 def delete_task(rid: str, task_id: str):
     with db() as conn:
@@ -391,6 +452,14 @@ def get_order():
 def save_order(body: OrderUpdate):
     kv_set("order", body.order)
     return {"ok": True}
+
+
+@app.post("/api/order/reset")
+def reset_order():
+    """Reset card order to match the sequence defined in restaurants.py."""
+    order = [r["id"] for r in RESTAURANTS]
+    kv_set("order", order)
+    return order
 
 
 # --- Pins ---

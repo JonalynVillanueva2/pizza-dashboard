@@ -2,7 +2,7 @@ export default function FilterBar({
   filters, active, onChange,
   search, onSearch,
   viewMode, onViewModeChange,
-  onExport, onSortByStatus, onAddRestaurant,
+  onExport, onSortByStatus, onResetOrder, onAddRestaurant,
 }) {
   return (
     <div className="toolbar">
@@ -37,10 +37,17 @@ export default function FilterBar({
           onClick={() => onViewModeChange("list")} title="List view">☰</button>
       </div>
 
-      {/* Sort by status */}
-      <button className="sort-btn" onClick={onSortByStatus} title="Sort: Active → Review → At Risk → Churned">
-        ↕ Sort by Status
-      </button>
+      {/* Sort buttons group */}
+      <div className="sort-group">
+        <button className="sort-btn" onClick={onSortByStatus}
+          title="Sort: Active → Review → At Risk → Churned">
+          ↕ By Status
+        </button>
+        <button className="sort-btn sort-btn--reset" onClick={onResetOrder}
+          title="Apply the order from restaurants.py">
+          ↺ Default Order
+        </button>
+      </div>
 
       {/* Add restaurant */}
       <button className="add-resto-btn" onClick={onAddRestaurant}>

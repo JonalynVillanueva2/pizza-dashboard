@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "../api.js";
 
 const STATUS_OPTIONS = ["Active", "At Risk", "Review", "Churned"];
@@ -83,6 +83,11 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
   const handleDeleteTask = async (taskId) => {
     await api.deleteTask(restaurant.id, taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+  };
+
+  const handleUpdateTask = async (taskId, text, due_date) => {
+    const updated = await api.updateTask(restaurant.id, taskId, { text, due_date });
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)));
   };
 
   const handleStatusChange = (e) => {
@@ -235,6 +240,7 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
                 task={task}
                 onToggle={() => handleToggleTask(task.id)}
                 onDelete={() => handleDeleteTask(task.id)}
+                onUpdate={(text, due_date) => handleUpdateTask(task.id, text, due_date)}
               />
             ))}
             {tasks.length === 0 && (
@@ -249,12 +255,71 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
   );
 }
 
-function TaskItem({ task, onToggle, onDelete }) {
-  const today = new Date().toISOString().slice(0, 10);
+function TaskItem({ task, onToggle, onDelete, onUpdate }) {
+  const [editing, setEditing]     = useState(false);
+  const [editText, setEditText]   = useState(task.text);
+  const [editDate, setEditDate]   = useState(task.due_date || "");
+  const [saving, setSaving]       = useState(false);
+
+  const today   = new Date().toISOString().slice(0, 10);
   const overdue = task.due_date && !task.done && task.due_date < today;
   const dueText = task.due_date
     ? (overdue ? `⚠ Overdue: ${task.due_date}` : `Due: ${task.due_date}`)
     : null;
+
+  const startEdit = () => {
+    setEditText(task.text);
+    setEditDate(task.due_date || "");
+    setEditing(true);
+  };
+
+  const cancelEdit = () => setEditing(false);
+
+  const saveEdit = async () => {
+    if (!editText.trim()) return;
+    setSaving(true);
+    try {
+      await onUpdate(editText.trim(), editDate || null);
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") saveEdit();
+    if (e.key === "Escape") cancelEdit();
+  };
+
+  if (editing) {
+    return (
+      <div className="task-item task-item-editing">
+        <div className="task-edit-row">
+          <input
+            className="task-edit-input"
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            autoFocus
+          />
+          <input
+            type="date"
+            className="task-date-input"
+            value={editDate}
+            onChange={(e) => setEditDate(e.target.value)}
+          />
+        </div>
+        <div className="task-edit-actions">
+          <button className="task-save-btn" onClick={saveEdit} disabled={saving || !editText.trim()}>
+            {saving ? "…" : "✓ Save"}
+          </button>
+          <button className="task-cancel-btn" onClick={cancelEdit} disabled={saving}>
+            ✕ Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`task-item${overdue ? " overdue" : ""}`}>
@@ -274,6 +339,7 @@ function TaskItem({ task, onToggle, onDelete }) {
           </div>
         )}
       </div>
+      <button className="task-edit-btn" onClick={startEdit} title="Edit task">✏</button>
       <button className="task-delete-btn" onClick={onDelete} title="Remove task">✕</button>
     </div>
   );

@@ -8,6 +8,7 @@ import RestaurantGrid from "./components/RestaurantGrid.jsx";
 import SearchModal from "./components/SearchModal.jsx";
 import TaskSummaryPanel from "./components/TaskSummaryPanel.jsx";
 import AddRestaurantModal from "./components/AddRestaurantModal.jsx";
+import EditRestaurantModal from "./components/EditRestaurantModal.jsx";
 
 const FILTERS = ["All", "Active", "At Risk", "Review", "Churned"];
 
@@ -23,7 +24,8 @@ export default function App() {
   const [flags, setFlags]               = useState(new Set());
   const [viewMode, setViewMode]         = useState("grid"); // "grid" | "list"
   const [allTasks, setAllTasks]         = useState({});
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal]   = useState(false);
+  const [editTarget, setEditTarget]       = useState(null); // restaurant being edited
   const restaurantsRef = useRef([]);
 
   useEffect(() => { restaurantsRef.current = restaurants; }, [restaurants]);
@@ -133,7 +135,42 @@ export default function App() {
     setRestaurants((prev) => [...prev, newResto]);
   }, []);
 
-  // Sort by status: Active → Review → At Risk → Churned, newest added last within each group
+  // Update restaurant
+  const handleUpdateRestaurant = useCallback(async (rid, data) => {
+    await api.updateRestaurant(rid, data);
+    setRestaurants((prev) =>
+      prev.map((r) => r.id === rid ? { ...r, ...data } : r)
+    );
+    // If the selected modal is open for this restaurant, update it too
+    setSelected((prev) => prev?.id === rid ? { ...prev, ...data } : prev);
+  }, []);
+
+  // Delete restaurant
+  const handleDeleteRestaurant = useCallback(async (rid) => {
+    await api.deleteRestaurant(rid);
+    setRestaurants((prev) => prev.filter((r) => r.id !== rid));
+    setPins((prev) => { const n = new Set(prev); n.delete(rid); return n; });
+    setFlags((prev) => { const n = new Set(prev); n.delete(rid); return n; });
+    setAllTasks((prev) => { const n = { ...prev }; delete n[rid]; return n; });
+  }, []);
+
+  // Reset order to restaurants.py sequence
+  const handleResetOrder = useCallback(async () => {
+    const newOrder = await api.resetOrder();
+    setRestaurants((prev) => {
+      const arr = [...prev];
+      arr.sort((a, b) => {
+        const ai = newOrder.indexOf(a.id);
+        const bi = newOrder.indexOf(b.id);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+      return arr;
+    });
+  }, []);
+
+  // Sort by status: Active → Review → At Risk → Churned
   const STATUS_PRIORITY = { Active: 0, Review: 1, "At Risk": 2, Churned: 3 };
   const handleSortByStatus = useCallback(() => {
     setRestaurants((prev) => {
@@ -200,6 +237,7 @@ export default function App() {
           onViewModeChange={setViewMode}
           onExport={handleExport}
           onSortByStatus={handleSortByStatus}
+          onResetOrder={handleResetOrder}
           onAddRestaurant={() => setShowAddModal(true)}
         />
         <RestaurantGrid
@@ -211,6 +249,7 @@ export default function App() {
           onStatusChange={handleStatusChange}
           onTogglePin={handleTogglePin}
           onToggleFlag={handleToggleFlag}
+          onEdit={setEditTarget}
           onReorder={handleReorder}
           onSaveOrder={handleSaveOrder}
         />
@@ -220,6 +259,15 @@ export default function App() {
         <AddRestaurantModal
           onSave={handleAddRestaurant}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {editTarget && (
+        <EditRestaurantModal
+          restaurant={editTarget}
+          onSave={handleUpdateRestaurant}
+          onDelete={handleDeleteRestaurant}
+          onClose={() => setEditTarget(null)}
         />
       )}
 
