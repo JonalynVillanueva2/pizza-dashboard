@@ -155,7 +155,7 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
             {/* Ask Claude row */}
             <div className="ask-claude-row">
               <span className="ask-claude-label">
-                No tokens connected?
+                ⚠️ <strong>Slack and Intercom are not connected yet.</strong><br />
               </span>
               <button className="ask-claude-btn" onClick={handleAskClaude}>
                 {claudeCopied ? "✓ Prompt copied! Paste it in Claude →" : "Ask Claude instead →"}
@@ -164,11 +164,9 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
           </div>
 
           {/* Not configured banner */}
-          {noIntegrations && (
+          {/* {noIntegrations && (
             <div className="unconfigured-banner">
               ⚠️ <strong>Slack and Intercom are not connected yet.</strong><br />
-              Add your tokens in Railway environment variables:<br />
-              <code>SLACK_BOT_TOKEN</code> and <code>INTERCOM_ACCESS_TOKEN</code>
             </div>
           )}
           {!noIntegrations && !config.slack && sources !== "intercom" && (
@@ -180,7 +178,7 @@ export default function SearchModal({ restaurant, config, onStatusChange, onClos
             <div className="unconfigured-banner">
               Intercom is not connected. Add <code>INTERCOM_ACCESS_TOKEN</code> to enable Intercom search.
             </div>
-          )}
+          )} */}
 
           {/* Loading */}
           {searching && (
