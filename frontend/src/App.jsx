@@ -9,6 +9,7 @@ import SearchModal from "./components/SearchModal.jsx";
 import TaskSummaryPanel from "./components/TaskSummaryPanel.jsx";
 import AddRestaurantModal from "./components/AddRestaurantModal.jsx";
 import EditRestaurantModal from "./components/EditRestaurantModal.jsx";
+import BulkTaskModal from "./components/BulkTaskModal.jsx";
 
 const FILTERS = ["All", "Active", "At Risk", "Review", "Churned"];
 
@@ -25,7 +26,8 @@ export default function App() {
   const [viewMode, setViewMode]         = useState("grid"); // "grid" | "list"
   const [allTasks, setAllTasks]         = useState({});
   const [showAddModal, setShowAddModal]   = useState(false);
-  const [editTarget, setEditTarget]       = useState(null); // restaurant being edited
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [editTarget, setEditTarget]       = useState(null);
   const restaurantsRef = useRef([]);
 
   useEffect(() => { restaurantsRef.current = restaurants; }, [restaurants]);
@@ -129,10 +131,20 @@ export default function App() {
     });
   }, []);
 
-  // Add restaurant
+  // Add restaurant — prepend to top and save new order
   const handleAddRestaurant = useCallback(async (data) => {
     const newResto = await api.addRestaurant(data);
-    setRestaurants((prev) => [...prev, newResto]);
+    setRestaurants((prev) => {
+      const updated = [newResto, ...prev];
+      api.saveOrder(updated.map((r) => r.id));
+      return updated;
+    });
+  }, []);
+
+  // Bulk create tasks
+  const handleBulkCreateTasks = useCallback(async (data) => {
+    await api.bulkCreateTasks(data);
+    api.getAllTasks().then(setAllTasks);
   }, []);
 
   // Update restaurant
@@ -238,6 +250,7 @@ export default function App() {
           onExport={handleExport}
           onSortByStatus={handleSortByStatus}
           onResetOrder={handleResetOrder}
+          onBulkTask={() => setShowBulkModal(true)}
           onAddRestaurant={() => setShowAddModal(true)}
         />
         <RestaurantGrid
@@ -254,6 +267,14 @@ export default function App() {
           onSaveOrder={handleSaveOrder}
         />
       </div>
+
+      {showBulkModal && (
+        <BulkTaskModal
+          restaurants={restaurants}
+          onSave={handleBulkCreateTasks}
+          onClose={() => setShowBulkModal(false)}
+        />
+      )}
 
       {showAddModal && (
         <AddRestaurantModal

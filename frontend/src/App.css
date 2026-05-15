@@ -1113,6 +1113,101 @@ body {
   font-weight: 600;
 }
 
+/* ── Task summary — expand button & task list ────────────────────── */
+.ts-resto-group { border-bottom: 1px solid var(--tp-50); }
+.ts-resto-group:last-child { border-bottom: none; }
+
+.ts-expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 9px;
+  color: var(--text-sec);
+  padding: 2px 4px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.ts-expand-btn:hover { color: var(--tp-700); }
+
+.ts-tasks-list {
+  padding: 4px 16px 8px 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ts-task-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--t-text);
+}
+
+.ts-task-check {
+  font-size: 13px;
+  flex-shrink: 0;
+  color: var(--text-sec);
+}
+
+.ts-task-done .ts-task-text {
+  text-decoration: line-through;
+  color: var(--text-sec);
+  opacity: 0.7;
+}
+
+.ts-task-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ts-task-due {
+  font-size: 11px;
+  color: var(--text-sec);
+  flex-shrink: 0;
+  background: var(--tp-50);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.ts-task-due.overdue {
+  color: #dc2626;
+  background: #fef2f2;
+  font-weight: 600;
+}
+
+/* ── Bulk Task button ────────────────────────────────────────────── */
+.bulk-task-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--tg-700);
+  background: var(--t-surface);
+  color: var(--tg-700);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.bulk-task-btn:hover {
+  background: #e6fdf7;
+}
+
+/* ── Bulk affected info box ──────────────────────────────────────── */
+.bulk-affected {
+  font-size: 13px;
+  color: var(--text-sec);
+  background: var(--tp-50);
+  border: 1px solid var(--tp-100);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  line-height: 1.5;
+}
+.bulk-affected strong { color: var(--tp-700); }
+
 /* ── Modal backdrop (used by Add/Edit Restaurant modals) ─────────── */
 .modal-backdrop {
   position: fixed;

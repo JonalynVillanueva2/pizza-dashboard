@@ -2,7 +2,7 @@ export default function FilterBar({
   filters, active, onChange,
   search, onSearch,
   viewMode, onViewModeChange,
-  onExport, onSortByStatus, onResetOrder, onAddRestaurant,
+  onExport, onSortByStatus, onResetOrder, onAddRestaurant, onBulkTask,
 }) {
   return (
     <div className="toolbar">
@@ -48,6 +48,11 @@ export default function FilterBar({
           ↺ Default Order
         </button>
       </div>
+
+      {/* Bulk task */}
+      <button className="bulk-task-btn" onClick={onBulkTask} title="Add the same task to multiple restaurants">
+        + Bulk Task
+      </button>
 
       {/* Add restaurant */}
       <button className="add-resto-btn" onClick={onAddRestaurant}>

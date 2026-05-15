@@ -182,6 +182,12 @@ class TaskUpdate(BaseModel):
     due_date: Optional[str] = None
 
 
+class BulkTaskCreate(BaseModel):
+    text: str
+    due_date: Optional[str] = None
+    status_filter: str = "All"  # "All", "Active", "Review", "At Risk", "Churned"
+
+
 class NoteUpdate(BaseModel):
     content: str
 
@@ -327,6 +333,35 @@ async def search(
 def _row_to_task(row) -> dict:
     return {"id": row[0], "restaurant_id": row[1], "text": row[2],
             "done": row[3], "due_date": row[4]}
+
+
+@app.post("/api/tasks/bulk")
+def bulk_create_tasks(body: BulkTaskCreate):
+    """Add the same task to all restaurants matching a status filter."""
+    with db() as conn:
+        with conn.cursor() as cur:
+            if body.status_filter == "All":
+                cur.execute("SELECT id FROM restaurants")
+            else:
+                cur.execute(
+                    "SELECT id FROM restaurants WHERE status = %s", (body.status_filter,)
+                )
+            rids = [row[0] for row in cur.fetchall()]
+
+        created = []
+        for rid in rids:
+            task_id = str(uuid.uuid4())
+            with conn.cursor() as cur:
+                cur.execute(
+                    "INSERT INTO tasks (id, restaurant_id, text, done, due_date) "
+                    "VALUES (%s, %s, %s, FALSE, %s)",
+                    (task_id, rid, body.text.strip(), body.due_date or None)
+                )
+            created.append({
+                "id": task_id, "restaurant_id": rid,
+                "text": body.text.strip(), "done": False, "due_date": body.due_date
+            })
+    return {"created": len(created), "tasks": created}
 
 
 @app.get("/api/tasks")

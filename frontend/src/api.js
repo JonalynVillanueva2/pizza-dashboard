@@ -31,6 +31,12 @@ export const api = {
     request(`/api/search/${rid}?q=${encodeURIComponent(q)}&sources=${sources}`),
 
   getAllTasks: () => request("/api/tasks"),
+  bulkCreateTasks: (data) =>
+    request("/api/tasks/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
   getTasks: (rid) => request(`/api/tasks/${rid}`),
   createTask: (rid, text, due_date = null) =>
     request(`/api/tasks/${rid}`, {
