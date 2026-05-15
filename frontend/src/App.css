@@ -252,7 +252,13 @@ body {
   gap: 10px;
   border-bottom: 1px solid #F2ECFC;
 }
-.card-header-left { flex: 1; min-width: 0; }
+.card-header-left  { flex: 1; min-width: 0; }
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
 .resto-name {
   font-size: 14px; font-weight: 700; color: var(--tp-900);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1107,8 +1113,32 @@ body {
   font-weight: 600;
 }
 
-/* ── Locked backdrop (Add Restaurant — not dismissible by clicking outside) */
-.modal-backdrop--locked { pointer-events: none; }
+/* ── Modal backdrop (used by Add/Edit Restaurant modals) ─────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24,1,58,0.55);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(3px);
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(24,1,58,0.3);
+}
+
+/* Locked = clicking outside does nothing */
+.modal-backdrop--locked { cursor: default; }
 .modal-backdrop--locked .modal-box { pointer-events: all; }
 
 /* ── Sort group ──────────────────────────────────────────────────── */
@@ -1235,15 +1265,66 @@ body {
 }
 .btn-secondary:hover { background: var(--tp-50); }
 
-/* ── Edit button on cards ────────────────────────────────────────── */
-.edit-btn {
-  color: var(--text-sec) !important;
-  font-size: 13px !important;
+/* ── Three-dot menu ──────────────────────────────────────────────── */
+.three-dot-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
-.edit-btn:hover {
-  color: var(--tp-700) !important;
-  background: var(--tp-50) !important;
+
+.three-dot-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-sec);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
 }
+.three-dot-btn:hover {
+  background: var(--tp-50);
+  color: var(--tp-700);
+}
+
+.three-dot-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  min-width: 130px;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.three-dot-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--t-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.three-dot-item:hover { background: var(--tp-50); color: var(--tp-700); }
+
+/* ── Copyable RID ────────────────────────────────────────────────── */
+.resto-id, .compact-id {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+.resto-id:hover, .compact-id:hover { color: var(--tp-700); }
+.resto-id.copied, .compact-id.copied { color: var(--tg-700); font-weight: 600; }
 
 /* ── EditRestaurantModal — RID readonly field ────────────────────── */
 .ar-readonly {

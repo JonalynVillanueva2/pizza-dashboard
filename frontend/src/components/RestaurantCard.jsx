@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "../api.js";
 
 const STATUS_OPTIONS = ["Active", "At Risk", "Review", "Churned"];
 
-// Exact badge class names matching the original HTML dashboard
 const BADGE_CLASS = {
   "Active":  "badge-Active",
   "At Risk": "badge-At-Risk",
@@ -22,10 +21,24 @@ export default function RestaurantCard({
 }) {
   const [tasks, setTasks]                   = useState([]);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [showDotMenu, setShowDotMenu]       = useState(false);
+  const [ridCopied, setRidCopied]           = useState(false);
+  const dotMenuRef                          = useRef(null);
 
   useEffect(() => {
     api.getTasks(restaurant.id).then(setTasks);
   }, [restaurant.id]);
+
+  // Close dot menu when clicking outside
+  useEffect(() => {
+    if (!showDotMenu) return;
+    const handler = (e) => {
+      if (dotMenuRef.current && !dotMenuRef.current.contains(e.target))
+        setShowDotMenu(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showDotMenu]);
 
   const doneCount  = tasks.filter((t) => t.done).length;
   const totalCount = tasks.length;
@@ -34,6 +47,37 @@ export default function RestaurantCard({
   const badgeCls   = BADGE_CLASS[restaurant.status] || "badge-Active";
 
   const stopAndRun = (e, fn) => { e.stopPropagation(); fn(); };
+
+  const handleCopyId = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(restaurant.id).catch(() => {});
+    setRidCopied(true);
+    setTimeout(() => setRidCopied(false), 1500);
+  };
+
+  const openEdit = (e) => {
+    e.stopPropagation();
+    setShowDotMenu(false);
+    onEdit(restaurant);
+  };
+
+  // ── Three-dot menu ───────────────────────────────────────────────
+  const ThreeDotMenu = () => (
+    <div className="three-dot-wrap" ref={dotMenuRef} onClick={(e) => e.stopPropagation()}>
+      <button
+        className="three-dot-btn"
+        onClick={() => setShowDotMenu((v) => !v)}
+        title="More options"
+      >⋮</button>
+      {showDotMenu && (
+        <div className="three-dot-menu">
+          <button className="three-dot-item" onClick={openEdit}>
+            ✏ Edit
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   // ── Compact / list mode ──────────────────────────────────────────
   if (compact) {
@@ -57,11 +101,15 @@ export default function RestaurantCard({
           onClick={(e) => stopAndRun(e, () => onTogglePin(restaurant.id))} title={pinned ? "Unpin" : "Pin"}>★</button>
         <button className={`icon-btn flag-btn${flagged ? " on" : ""}`}
           onClick={(e) => stopAndRun(e, () => onToggleFlag(restaurant.id))} title="Flag urgent">🚨</button>
-        <button className="icon-btn edit-btn"
-          onClick={(e) => stopAndRun(e, () => onEdit(restaurant))} title="Edit restaurant">✏</button>
 
         <span className="compact-name">{restaurant.name}</span>
-        <span className="compact-id">{restaurant.id}</span>
+        <span
+          className={`compact-id${ridCopied ? " copied" : ""}`}
+          onClick={handleCopyId}
+          title="Click to copy RID"
+        >
+          {ridCopied ? "✓ Copied!" : restaurant.id}
+        </span>
 
         <div style={{ position: "relative", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
           <button className={`status-badge ${badgeCls}`} onClick={() => setShowStatusMenu((v) => !v)}>
@@ -72,6 +120,8 @@ export default function RestaurantCard({
               onSelect={(s) => { onStatusChange(restaurant.id, s); setShowStatusMenu(false); }} />
           )}
         </div>
+
+        <ThreeDotMenu />
 
         <span className="compact-tasks">{doneCount}/{totalCount} tasks</span>
 
@@ -126,16 +176,25 @@ export default function RestaurantCard({
             {flagged && <span className="flag-dot">🚨 </span>}
             {restaurant.name}
           </div>
-          <div className="resto-id">{restaurant.id}</div>
+          <div
+            className={`resto-id${ridCopied ? " copied" : ""}`}
+            onClick={handleCopyId}
+            title="Click to copy RID"
+          >
+            {ridCopied ? "✓ Copied!" : restaurant.id}
+          </div>
         </div>
-        <div className="status-wrap" onClick={(e) => e.stopPropagation()}>
-          <button className={`status-badge ${badgeCls}`} onClick={() => setShowStatusMenu((v) => !v)}>
-            {restaurant.status}
-          </button>
-          {showStatusMenu && (
-            <StatusMenu current={restaurant.status}
-              onSelect={(s) => { onStatusChange(restaurant.id, s); setShowStatusMenu(false); }} />
-          )}
+        <div className="card-header-right" onClick={(e) => e.stopPropagation()}>
+          <div className="status-wrap">
+            <button className={`status-badge ${badgeCls}`} onClick={() => setShowStatusMenu((v) => !v)}>
+              {restaurant.status}
+            </button>
+            {showStatusMenu && (
+              <StatusMenu current={restaurant.status}
+                onSelect={(s) => { onStatusChange(restaurant.id, s); setShowStatusMenu(false); }} />
+            )}
+          </div>
+          <ThreeDotMenu />
         </div>
       </div>
 
@@ -163,29 +222,22 @@ export default function RestaurantCard({
           </button>
         )}
 
-        {/* Green Dot link */}
         <a
           href={`https://greendot.prod.letsdowonders.io/greendot/restaurant/${restaurant.id}`}
-          target="_blank"
-          rel="noreferrer"
+          target="_blank" rel="noreferrer"
           className="btn-gd"
           onClick={(e) => e.stopPropagation()}
           title="Open in Green Dot"
-        >
-          🟢 GD
-        </a>
+        >🟢 GD</a>
 
         <button className="btn-tasks" onClick={(e) => stopAndRun(e, () => onSelect(restaurant))}>
           📋 Tasks <span className="task-count-badge">{totalCount}</span>
         </button>
 
-        {/* Pin, flag, edit */}
         <button className={`icon-btn pin-btn${pinned ? " on" : ""}`}
           onClick={(e) => stopAndRun(e, () => onTogglePin(restaurant.id))} title={pinned ? "Unpin" : "Pin"}>★</button>
         <button className={`icon-btn flag-btn${flagged ? " on" : ""}`}
           onClick={(e) => stopAndRun(e, () => onToggleFlag(restaurant.id))} title="Flag urgent">🚨</button>
-        <button className="icon-btn edit-btn"
-          onClick={(e) => stopAndRun(e, () => onEdit(restaurant))} title="Edit restaurant">✏</button>
       </div>
     </div>
   );
