@@ -1106,3 +1106,116 @@ body {
   color: #ef4444;
   font-weight: 600;
 }
+
+/* ── Sort & Add buttons in toolbar ──────────────────────────────── */
+.sort-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--t-border);
+  background: var(--t-surface);
+  color: var(--tp-700);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sort-btn:hover {
+  background: var(--tp-50);
+  border-color: var(--tp-700);
+}
+
+.add-resto-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--tg-500);
+  color: var(--t-dark);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.add-resto-btn:hover { background: var(--tg-400); }
+
+/* ── Add Restaurant Modal ────────────────────────────────────────── */
+.add-resto-modal {
+  width: 480px;
+  max-width: 95vw;
+}
+
+.add-resto-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 24px 24px;
+}
+
+.ar-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t-text);
+}
+
+.ar-required { color: #ef4444; }
+.ar-optional { font-weight: 400; color: var(--t-muted); font-size: 12px; }
+
+.ar-input {
+  padding: 9px 12px;
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--t-text);
+  background: var(--t-bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ar-input:focus { border-color: var(--tp-700); background: #fff; }
+.ar-select { cursor: pointer; }
+
+.ar-error {
+  font-size: 13px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.ar-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-primary {
+  padding: 9px 20px;
+  background: var(--tp-700);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover:not(:disabled) { background: var(--tp-800); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-secondary {
+  padding: 9px 20px;
+  background: var(--t-surface);
+  color: var(--t-text);
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-secondary:hover { background: var(--tp-50); }

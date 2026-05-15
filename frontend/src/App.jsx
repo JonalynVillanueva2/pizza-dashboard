@@ -7,6 +7,7 @@ import FilterBar from "./components/FilterBar.jsx";
 import RestaurantGrid from "./components/RestaurantGrid.jsx";
 import SearchModal from "./components/SearchModal.jsx";
 import TaskSummaryPanel from "./components/TaskSummaryPanel.jsx";
+import AddRestaurantModal from "./components/AddRestaurantModal.jsx";
 
 const FILTERS = ["All", "Active", "At Risk", "Review", "Churned"];
 
@@ -22,6 +23,7 @@ export default function App() {
   const [flags, setFlags]               = useState(new Set());
   const [viewMode, setViewMode]         = useState("grid"); // "grid" | "list"
   const [allTasks, setAllTasks]         = useState({});
+  const [showAddModal, setShowAddModal] = useState(false);
   const restaurantsRef = useRef([]);
 
   useEffect(() => { restaurantsRef.current = restaurants; }, [restaurants]);
@@ -125,6 +127,26 @@ export default function App() {
     });
   }, []);
 
+  // Add restaurant
+  const handleAddRestaurant = useCallback(async (data) => {
+    const newResto = await api.addRestaurant(data);
+    setRestaurants((prev) => [...prev, newResto]);
+  }, []);
+
+  // Sort by status: Active → Review → At Risk → Churned, newest added last within each group
+  const STATUS_PRIORITY = { Active: 0, Review: 1, "At Risk": 2, Churned: 3 };
+  const handleSortByStatus = useCallback(() => {
+    setRestaurants((prev) => {
+      const sorted = [...prev].sort((a, b) => {
+        const pa = STATUS_PRIORITY[a.status] ?? 99;
+        const pb = STATUS_PRIORITY[b.status] ?? 99;
+        return pa - pb;
+      });
+      api.saveOrder(sorted.map((r) => r.id));
+      return sorted;
+    });
+  }, []);
+
   // Export CSV
   const handleExport = useCallback(() => {
     const headers = ["ID", "Name", "Status", "Pinned", "Flagged", "Slack Channel", "SOP"];
@@ -177,6 +199,8 @@ export default function App() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           onExport={handleExport}
+          onSortByStatus={handleSortByStatus}
+          onAddRestaurant={() => setShowAddModal(true)}
         />
         <RestaurantGrid
           restaurants={filtered}
@@ -191,6 +215,13 @@ export default function App() {
           onSaveOrder={handleSaveOrder}
         />
       </div>
+
+      {showAddModal && (
+        <AddRestaurantModal
+          onSave={handleAddRestaurant}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
 
       {selected && (
         <SearchModal

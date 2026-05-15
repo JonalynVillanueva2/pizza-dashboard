@@ -58,7 +58,6 @@ def get_pool():
 
 @contextmanager
 def db():
-    """Context manager that yields a connection and auto-commits / returns it."""
     conn = get_pool().getconn()
     try:
         yield conn
@@ -71,19 +70,32 @@ def db():
 
 
 # ---------------------------------------------------------------------------
-# Bootstrap — create tables if they don't exist
+# Bootstrap — create tables and seed restaurants
 # ---------------------------------------------------------------------------
 
 def init_db():
     with db() as conn:
         with conn.cursor() as cur:
-            # Key-value store for notes, statuses, order, pins, flags
+            # Restaurants table (source of truth)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS restaurants (
+                    id            TEXT PRIMARY KEY,
+                    name          TEXT NOT NULL,
+                    status        TEXT NOT NULL DEFAULT 'Active',
+                    slack_channel TEXT,
+                    sop           TEXT,
+                    created_at    TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+
+            # Key-value store for notes, order, pins, flags
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS kv_store (
                     key   TEXT PRIMARY KEY,
                     value TEXT NOT NULL
                 )
             """)
+
             # Tasks table
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
@@ -95,15 +107,32 @@ def init_db():
                     created_at    TIMESTAMPTZ DEFAULT NOW()
                 )
             """)
-            cur.execute("CREATE INDEX IF NOT EXISTS tasks_restaurant_idx ON tasks(restaurant_id)")
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS tasks_restaurant_idx ON tasks(restaurant_id)"
+            )
+
+            # Seed restaurants only if table is empty
+            cur.execute("SELECT COUNT(*) FROM restaurants")
+            if cur.fetchone()[0] == 0:
+                for r in RESTAURANTS:
+                    cur.execute("""
+                        INSERT INTO restaurants (id, name, status, slack_channel, sop)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ON CONFLICT (id) DO NOTHING
+                    """, (
+                        r["id"],
+                        r["name"],
+                        r.get("status", "Active"),
+                        r.get("slack_channel") or None,
+                        r.get("sop") or None,
+                    ))
 
 
-# Run on startup
 init_db()
 
 
 # ---------------------------------------------------------------------------
-# KV helpers (replaces _read_json / _write_json for simple values)
+# KV helpers
 # ---------------------------------------------------------------------------
 
 def kv_get(key: str, default=None):
@@ -128,9 +157,17 @@ def kv_set(key: str, value):
 # Pydantic models
 # ---------------------------------------------------------------------------
 
+class RestaurantCreate(BaseModel):
+    id: str          # RID e.g. "R99999"
+    name: str
+    status: str = "Active"
+    slack_channel: Optional[str] = None
+    sop: Optional[str] = None
+
+
 class TaskCreate(BaseModel):
     text: str
-    due_date: Optional[str] = None  # ISO date string e.g. "2026-05-20"
+    due_date: Optional[str] = None
 
 
 class NoteUpdate(BaseModel):
@@ -166,20 +203,48 @@ class SearchResult(BaseModel):
 
 @app.get("/api/restaurants")
 def get_restaurants():
-    """Return all restaurants with their current status overrides."""
-    statuses = kv_get("statuses", {})
-    result = []
-    for r in RESTAURANTS:
-        entry = dict(r)
-        if r["id"] in statuses:
-            entry["status"] = statuses[r["id"]]
-        result.append(entry)
-    return result
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, name, status, slack_channel, sop "
+                "FROM restaurants ORDER BY created_at ASC"
+            )
+            rows = cur.fetchall()
+    return [
+        {"id": r[0], "name": r[1], "status": r[2],
+         "slack_channel": r[3] or "", "sop": r[4] or ""}
+        for r in rows
+    ]
+
+
+@app.post("/api/restaurants")
+def create_restaurant(body: RestaurantCreate):
+    """Add a new restaurant."""
+    with db() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("""
+                    INSERT INTO restaurants (id, name, status, slack_channel, sop)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (
+                    body.id.strip(),
+                    body.name.strip(),
+                    body.status,
+                    body.slack_channel.strip() if body.slack_channel else None,
+                    body.sop.strip() if body.sop else None,
+                ))
+            except psycopg2.errors.UniqueViolation:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Restaurant ID '{body.id}' already exists."
+                )
+    return {"id": body.id, "name": body.name, "status": body.status,
+            "slack_channel": body.slack_channel or "",
+            "sop": body.sop or ""}
 
 
 @app.get("/api/config")
 async def get_config():
-    """Return which integrations are configured."""
     return {
         "slack": await slack_service.is_configured(),
         "intercom": await intercom_service.is_configured(),
@@ -194,34 +259,33 @@ async def search(
     q: str = Query(..., min_length=1),
     sources: str = Query("all"),
 ):
-    restaurant = next((r for r in RESTAURANTS if r["id"] == rid), None)
-    if not restaurant:
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, name, slack_channel FROM restaurants WHERE id = %s", (rid,)
+            )
+            row = cur.fetchone()
+    if not row:
         raise HTTPException(status_code=404, detail="Restaurant not found")
+    restaurant = {"id": row[0], "name": row[1], "slack_channel": row[2]}
 
     results = []
     if sources in ("all", "slack") and restaurant.get("slack_channel"):
         results.extend(await slack_service.search_slack(restaurant["slack_channel"], q))
     if sources in ("all", "intercom"):
         results.extend(await intercom_service.search_intercom(restaurant["name"], q))
-
     return {"query": q, "restaurant": restaurant["name"], "results": results}
 
 
 # --- Tasks ---
 
 def _row_to_task(row) -> dict:
-    return {
-        "id":            row[0],
-        "restaurant_id": row[1],
-        "text":          row[2],
-        "done":          row[3],
-        "due_date":      row[4],
-    }
+    return {"id": row[0], "restaurant_id": row[1], "text": row[2],
+            "done": row[3], "due_date": row[4]}
 
 
 @app.get("/api/tasks")
 def get_all_tasks():
-    """Return all tasks keyed by restaurant_id."""
     with db() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -307,9 +371,12 @@ def save_notes(body: NoteUpdate):
 
 @app.post("/api/status/{rid}")
 def update_status(rid: str, body: StatusUpdate):
-    statuses = kv_get("statuses", {})
-    statuses[rid] = body.status
-    kv_set("statuses", statuses)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE restaurants SET status = %s WHERE id = %s",
+                (body.status, rid)
+            )
     return {"ok": True}
 
 

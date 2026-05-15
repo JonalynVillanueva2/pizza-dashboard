@@ -2,7 +2,7 @@ export default function FilterBar({
   filters, active, onChange,
   search, onSearch,
   viewMode, onViewModeChange,
-  onExport,
+  onExport, onSortByStatus, onAddRestaurant,
 }) {
   return (
     <div className="toolbar">
@@ -19,7 +19,7 @@ export default function FilterBar({
         ))}
       </div>
 
-      {/* Search — icon baked into input via CSS background */}
+      {/* Search */}
       <div className="search-box">
         <input
           type="text"
@@ -36,6 +36,16 @@ export default function FilterBar({
         <button className={`view-btn${viewMode === "list" ? " active" : ""}`}
           onClick={() => onViewModeChange("list")} title="List view">☰</button>
       </div>
+
+      {/* Sort by status */}
+      <button className="sort-btn" onClick={onSortByStatus} title="Sort: Active → Review → At Risk → Churned">
+        ↕ Sort by Status
+      </button>
+
+      {/* Add restaurant */}
+      <button className="add-resto-btn" onClick={onAddRestaurant}>
+        + Add Restaurant
+      </button>
 
       {/* Export */}
       <button className="export-btn" onClick={onExport}>↓ Export CSV</button>

@@ -11,6 +11,12 @@ async function request(path, options = {}) {
 
 export const api = {
   getRestaurants: () => request("/api/restaurants"),
+  addRestaurant: (data) =>
+    request("/api/restaurants", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
   getConfig:      () => request("/api/config"),
 
   search: (rid, q, sources = "all") =>
