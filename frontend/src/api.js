@@ -16,6 +16,7 @@ export const api = {
   search: (rid, q, sources = "all") =>
     request(`/api/search/${rid}?q=${encodeURIComponent(q)}&sources=${sources}`),
 
+  getAllTasks: () => request("/api/tasks"),
   getTasks: (rid) => request(`/api/tasks/${rid}`),
   createTask: (rid, text, due_date = null) =>
     request(`/api/tasks/${rid}`, {

@@ -652,22 +652,20 @@ body {
 .search-box {
   flex: 1;
   min-width: 200px;
-  position: relative;
 }
 .search-box input {
   width: 100%;
-  padding: 9px 14px 9px 38px;
+  padding: 9px 14px 9px 36px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--t-border);
   font-size: 13px;
   outline: none;
   box-shadow: var(--shadow-sm);
-  background: var(--t-surface);
+  background: var(--t-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23bbb' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='16.5' y1='16.5' x2='22' y2='22'/%3E%3C/svg%3E") no-repeat 11px center;
   transition: border 0.15s;
   font-family: inherit;
 }
 .search-box input:focus { border-color: var(--tp-500); }
-.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #ccc; font-size: 15px; pointer-events: none; }
 
 /* View toggle */
 .view-toggle {
@@ -938,4 +936,173 @@ body {
   padding: 24px;
   color: var(--text-sec);
   font-size: 14px;
+}
+
+/* ── Task Summary Panel ──────────────────────────────────────────── */
+.task-summary-panel {
+  background: var(--t-surface);
+  border: 1px solid var(--t-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.ts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(135deg, var(--t-dark) 0%, var(--t-charcoal) 100%);
+  color: var(--text-inv);
+}
+.ts-header:hover { opacity: 0.95; }
+
+.ts-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ts-icon { font-size: 16px; }
+.ts-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.ts-pending-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.ts-all-done-badge {
+  background: var(--tg-500);
+  color: var(--t-dark);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.ts-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ts-overall {
+  font-size: 12px;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+.ts-mini-bar {
+  width: 80px;
+  height: 6px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ts-mini-fill {
+  height: 100%;
+  background: var(--tg-500);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.ts-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tg-400);
+  min-width: 36px;
+  text-align: right;
+}
+.ts-chevron {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* Body */
+.ts-body {
+  padding: 8px 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.ts-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  gap: 12px;
+  transition: background 0.15s;
+}
+.ts-row:hover { background: var(--tp-50); }
+
+.ts-row-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ts-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+}
+.ts-dot.done { background: var(--tg-700); }
+
+.ts-resto-name {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tp-700);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.ts-resto-name:hover { text-decoration: underline; }
+
+.ts-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ts-bar {
+  width: 80px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ts-bar-fill {
+  height: 100%;
+  background: var(--tp-700);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.ts-count {
+  font-size: 12px;
+  color: var(--text-sec);
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: right;
+}
+.ts-pending-inline {
+  color: #ef4444;
+  font-weight: 600;
 }

@@ -6,7 +6,7 @@ export default function FilterBar({
 }) {
   return (
     <div className="toolbar">
-      {/* Filter tabs — grouped in white pill container */}
+      {/* Filter tabs */}
       <div className="filter-tabs">
         {filters.map((f) => (
           <button
@@ -19,9 +19,8 @@ export default function FilterBar({
         ))}
       </div>
 
-      {/* Search box */}
+      {/* Search — icon baked into input via CSS background */}
       <div className="search-box">
-        <span className="search-icon">🔍</span>
         <input
           type="text"
           placeholder="Search by name or ID…"
@@ -32,22 +31,14 @@ export default function FilterBar({
 
       {/* View toggle */}
       <div className="view-toggle">
-        <button
-          className={`view-btn${viewMode === "grid" ? " active" : ""}`}
-          onClick={() => onViewModeChange("grid")}
-          title="Grid view"
-        >⊞</button>
-        <button
-          className={`view-btn${viewMode === "list" ? " active" : ""}`}
-          onClick={() => onViewModeChange("list")}
-          title="List view"
-        >☰</button>
+        <button className={`view-btn${viewMode === "grid" ? " active" : ""}`}
+          onClick={() => onViewModeChange("grid")} title="Grid view">⊞</button>
+        <button className={`view-btn${viewMode === "list" ? " active" : ""}`}
+          onClick={() => onViewModeChange("list")} title="List view">☰</button>
       </div>
 
       {/* Export */}
-      <button className="export-btn" onClick={onExport} title="Export to CSV">
-        ↓ Export CSV
-      </button>
+      <button className="export-btn" onClick={onExport}>↓ Export CSV</button>
     </div>
   );
 }

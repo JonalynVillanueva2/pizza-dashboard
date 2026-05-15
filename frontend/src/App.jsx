@@ -6,6 +6,7 @@ import NotesPanel from "./components/NotesPanel.jsx";
 import FilterBar from "./components/FilterBar.jsx";
 import RestaurantGrid from "./components/RestaurantGrid.jsx";
 import SearchModal from "./components/SearchModal.jsx";
+import TaskSummaryPanel from "./components/TaskSummaryPanel.jsx";
 
 const FILTERS = ["All", "Active", "At Risk", "Review", "Churned"];
 
@@ -20,6 +21,7 @@ export default function App() {
   const [pins, setPins]                 = useState(new Set());
   const [flags, setFlags]               = useState(new Set());
   const [viewMode, setViewMode]         = useState("grid"); // "grid" | "list"
+  const [allTasks, setAllTasks]         = useState({});
   const restaurantsRef = useRef([]);
 
   useEffect(() => { restaurantsRef.current = restaurants; }, [restaurants]);
@@ -33,7 +35,8 @@ export default function App() {
       api.getOrder(),
       api.getPins(),
       api.getFlags(),
-    ]).then(([restos, cfg, n, order, savedPins, savedFlags]) => {
+      api.getAllTasks(),
+    ]).then(([restos, cfg, n, order, savedPins, savedFlags, tasks]) => {
       // Apply saved drag order
       if (order?.length > 0) {
         restos.sort((a, b) => {
@@ -49,6 +52,7 @@ export default function App() {
       setNotes(n.content || "");
       setPins(new Set(savedPins || []));
       setFlags(new Set(savedFlags || []));
+      setAllTasks(tasks || {});
     }).finally(() => setLoading(false));
   }, []);
 
@@ -159,6 +163,11 @@ export default function App() {
       <div className="app-body">
         <StatsBar restaurants={restaurants} onFilter={setFilter} />
         <NotesPanel notes={notes} onSave={handleSaveNotes} />
+        <TaskSummaryPanel
+          allTasks={allTasks}
+          restaurants={restaurants}
+          onSelectRestaurant={setSelected}
+        />
         <FilterBar
           filters={FILTERS}
           active={filter}
@@ -188,7 +197,10 @@ export default function App() {
           restaurant={selected}
           config={config}
           onStatusChange={handleStatusChange}
-          onClose={() => setSelected(null)}
+          onClose={() => {
+            setSelected(null);
+            api.getAllTasks().then(setAllTasks);
+          }}
         />
       )}
     </>

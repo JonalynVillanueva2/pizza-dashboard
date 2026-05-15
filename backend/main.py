@@ -161,6 +161,12 @@ async def search(
 
 # --- Tasks ---
 
+@app.get("/api/tasks")
+def get_all_tasks():
+    """Return all tasks across every restaurant, keyed by restaurant ID."""
+    return _read_json(TASKS_FILE, {})
+
+
 @app.get("/api/tasks/{rid}")
 def get_tasks(rid: str):
     tasks = _read_json(TASKS_FILE, {})
