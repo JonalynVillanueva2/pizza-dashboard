@@ -1,13 +1,18 @@
 """
 Tarro Pizza Dashboard — FastAPI backend
 Serves the React app in production and exposes /api/* endpoints.
+Data is persisted in PostgreSQL (Railway-managed).
 """
 
 import json
 import os
+import uuid
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional
 
+import psycopg2
+import psycopg2.pool
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -24,7 +29,7 @@ from backend.services import slack_service, intercom_service
 # App setup
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="Tarro Pizza Dashboard", version="1.0.0")
+app = FastAPI(title="Tarro Pizza Dashboard", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,40 +39,96 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# JSON file persistence helpers
+# Database — connection pool
 # ---------------------------------------------------------------------------
 
-DATA_DIR = Path(__file__).parent / "data"
-TASKS_FILE  = DATA_DIR / "tasks.json"
-NOTES_FILE  = DATA_DIR / "notes.json"
-STATUS_FILE = DATA_DIR / "statuses.json"
-ORDER_FILE  = DATA_DIR / "order.json"
-PINS_FILE   = DATA_DIR / "pins.json"
-FLAGS_FILE  = DATA_DIR / "flags.json"
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set. "
+                       "Add the PostgreSQL plugin in Railway.")
+
+_pool: psycopg2.pool.ThreadedConnectionPool = None
 
 
-def _read_json(path: Path, default):
-    if path.exists():
-        try:
-            return json.loads(path.read_text())
-        except Exception:
-            pass
-    return default
+def get_pool():
+    global _pool
+    if _pool is None:
+        _pool = psycopg2.pool.ThreadedConnectionPool(1, 10, DATABASE_URL)
+    return _pool
 
 
-def _write_json(path: Path, data):
-    path.write_text(json.dumps(data, indent=2))
+@contextmanager
+def db():
+    """Context manager that yields a connection and auto-commits / returns it."""
+    conn = get_pool().getconn()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        get_pool().putconn(conn)
+
+
+# ---------------------------------------------------------------------------
+# Bootstrap — create tables if they don't exist
+# ---------------------------------------------------------------------------
+
+def init_db():
+    with db() as conn:
+        with conn.cursor() as cur:
+            # Key-value store for notes, statuses, order, pins, flags
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS kv_store (
+                    key   TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                )
+            """)
+            # Tasks table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS tasks (
+                    id            TEXT PRIMARY KEY,
+                    restaurant_id TEXT NOT NULL,
+                    text          TEXT NOT NULL,
+                    done          BOOLEAN DEFAULT FALSE,
+                    due_date      TEXT,
+                    created_at    TIMESTAMPTZ DEFAULT NOW()
+                )
+            """)
+            cur.execute("CREATE INDEX IF NOT EXISTS tasks_restaurant_idx ON tasks(restaurant_id)")
+
+
+# Run on startup
+init_db()
+
+
+# ---------------------------------------------------------------------------
+# KV helpers (replaces _read_json / _write_json for simple values)
+# ---------------------------------------------------------------------------
+
+def kv_get(key: str, default=None):
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT value FROM kv_store WHERE key = %s", (key,))
+            row = cur.fetchone()
+            return json.loads(row[0]) if row else default
+
+
+def kv_set(key: str, value):
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO kv_store (key, value)
+                VALUES (%s, %s)
+                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+            """, (key, json.dumps(value)))
 
 
 # ---------------------------------------------------------------------------
 # Pydantic models
 # ---------------------------------------------------------------------------
-
-class Task(BaseModel):
-    id: str
-    text: str
-    done: bool = False
-
 
 class TaskCreate(BaseModel):
     text: str
@@ -108,7 +169,7 @@ class SearchResult(BaseModel):
 @app.get("/api/restaurants")
 def get_restaurants():
     """Return all restaurants with their current status overrides."""
-    statuses = _read_json(STATUS_FILE, {})
+    statuses = kv_get("statuses", {})
     result = []
     for r in RESTAURANTS:
         entry = dict(r)
@@ -133,75 +194,101 @@ async def get_config():
 async def search(
     rid: str,
     q: str = Query(..., min_length=1),
-    sources: str = Query("all"),  # "slack", "intercom", or "all"
+    sources: str = Query("all"),
 ):
-    """Search Slack and/or Intercom for keyword within a restaurant's context."""
     restaurant = next((r for r in RESTAURANTS if r["id"] == rid), None)
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
 
     results = []
-    use_slack = sources in ("all", "slack")
-    use_intercom = sources in ("all", "intercom")
-
-    if use_slack and restaurant.get("slack_channel"):
-        slack_results = await slack_service.search_slack(
-            restaurant["slack_channel"], q
-        )
-        results.extend(slack_results)
-
-    if use_intercom:
-        intercom_results = await intercom_service.search_intercom(
-            restaurant["name"], q
-        )
-        results.extend(intercom_results)
+    if sources in ("all", "slack") and restaurant.get("slack_channel"):
+        results.extend(await slack_service.search_slack(restaurant["slack_channel"], q))
+    if sources in ("all", "intercom"):
+        results.extend(await intercom_service.search_intercom(restaurant["name"], q))
 
     return {"query": q, "restaurant": restaurant["name"], "results": results}
 
 
 # --- Tasks ---
 
+def _row_to_task(row) -> dict:
+    return {
+        "id":            row[0],
+        "restaurant_id": row[1],
+        "text":          row[2],
+        "done":          row[3],
+        "due_date":      row[4],
+    }
+
+
 @app.get("/api/tasks")
 def get_all_tasks():
-    """Return all tasks across every restaurant, keyed by restaurant ID."""
-    return _read_json(TASKS_FILE, {})
+    """Return all tasks keyed by restaurant_id."""
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, restaurant_id, text, done, due_date "
+                "FROM tasks ORDER BY created_at ASC"
+            )
+            rows = cur.fetchall()
+    result: dict[str, list] = {}
+    for row in rows:
+        t = _row_to_task(row)
+        result.setdefault(t["restaurant_id"], []).append(t)
+    return result
 
 
 @app.get("/api/tasks/{rid}")
 def get_tasks(rid: str):
-    tasks = _read_json(TASKS_FILE, {})
-    return tasks.get(rid, [])
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, restaurant_id, text, done, due_date "
+                "FROM tasks WHERE restaurant_id = %s ORDER BY created_at ASC",
+                (rid,)
+            )
+            rows = cur.fetchall()
+    return [_row_to_task(r) for r in rows]
 
 
 @app.post("/api/tasks/{rid}")
 def create_task(rid: str, body: TaskCreate):
-    import uuid
-    tasks = _read_json(TASKS_FILE, {})
-    if rid not in tasks:
-        tasks[rid] = []
-    new_task = {"id": str(uuid.uuid4()), "text": body.text, "done": False, "due_date": body.due_date}
-    tasks[rid].append(new_task)
-    _write_json(TASKS_FILE, tasks)
-    return new_task
+    task_id = str(uuid.uuid4())
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO tasks (id, restaurant_id, text, done, due_date) "
+                "VALUES (%s, %s, %s, FALSE, %s)",
+                (task_id, rid, body.text, body.due_date)
+            )
+    return {"id": task_id, "restaurant_id": rid, "text": body.text,
+            "done": False, "due_date": body.due_date}
 
 
 @app.patch("/api/tasks/{rid}/{task_id}")
 def toggle_task(rid: str, task_id: str):
-    tasks = _read_json(TASKS_FILE, {})
-    for task in tasks.get(rid, []):
-        if task["id"] == task_id:
-            task["done"] = not task["done"]
-            _write_json(TASKS_FILE, tasks)
-            return task
-    raise HTTPException(status_code=404, detail="Task not found")
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE tasks SET done = NOT done "
+                "WHERE id = %s AND restaurant_id = %s "
+                "RETURNING id, restaurant_id, text, done, due_date",
+                (task_id, rid)
+            )
+            row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return _row_to_task(row)
 
 
 @app.delete("/api/tasks/{rid}/{task_id}")
 def delete_task(rid: str, task_id: str):
-    tasks = _read_json(TASKS_FILE, {})
-    original = tasks.get(rid, [])
-    tasks[rid] = [t for t in original if t["id"] != task_id]
-    _write_json(TASKS_FILE, tasks)
+    with db() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM tasks WHERE id = %s AND restaurant_id = %s",
+                (task_id, rid)
+            )
     return {"ok": True}
 
 
@@ -209,12 +296,12 @@ def delete_task(rid: str, task_id: str):
 
 @app.get("/api/notes")
 def get_notes():
-    return _read_json(NOTES_FILE, {"content": ""})
+    return {"content": kv_get("notes", "")}
 
 
 @app.post("/api/notes")
 def save_notes(body: NoteUpdate):
-    _write_json(NOTES_FILE, {"content": body.content})
+    kv_set("notes", body.content)
     return {"ok": True}
 
 
@@ -222,9 +309,9 @@ def save_notes(body: NoteUpdate):
 
 @app.post("/api/status/{rid}")
 def update_status(rid: str, body: StatusUpdate):
-    statuses = _read_json(STATUS_FILE, {})
+    statuses = kv_get("statuses", {})
     statuses[rid] = body.status
-    _write_json(STATUS_FILE, statuses)
+    kv_set("statuses", statuses)
     return {"ok": True}
 
 
@@ -232,12 +319,12 @@ def update_status(rid: str, body: StatusUpdate):
 
 @app.get("/api/order")
 def get_order():
-    return _read_json(ORDER_FILE, [])
+    return kv_get("order", [])
 
 
 @app.post("/api/order")
 def save_order(body: OrderUpdate):
-    _write_json(ORDER_FILE, body.order)
+    kv_set("order", body.order)
     return {"ok": True}
 
 
@@ -245,12 +332,12 @@ def save_order(body: OrderUpdate):
 
 @app.get("/api/pins")
 def get_pins():
-    return _read_json(PINS_FILE, [])
+    return kv_get("pins", [])
 
 
 @app.post("/api/pins")
 def save_pins(body: dict):
-    _write_json(PINS_FILE, body.get("pins", []))
+    kv_set("pins", body.get("pins", []))
     return {"ok": True}
 
 
@@ -258,12 +345,12 @@ def save_pins(body: dict):
 
 @app.get("/api/flags")
 def get_flags():
-    return _read_json(FLAGS_FILE, [])
+    return kv_get("flags", [])
 
 
 @app.post("/api/flags")
 def save_flags(body: dict):
-    _write_json(FLAGS_FILE, body.get("flags", []))
+    kv_set("flags", body.get("flags", []))
     return {"ok": True}
 
 
@@ -278,5 +365,4 @@ if FRONTEND_DIST.exists():
 
     @app.get("/{full_path:path}")
     def serve_spa(full_path: str):
-        index = FRONTEND_DIST / "index.html"
-        return FileResponse(str(index))
+        return FileResponse(str(FRONTEND_DIST / "index.html"))
