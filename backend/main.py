@@ -44,16 +44,14 @@ app.add_middleware(
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL environment variable is not set. "
-                       "Add the PostgreSQL plugin in Railway.")
-
 _pool: psycopg2.pool.ThreadedConnectionPool = None
 
 
 def get_pool():
     global _pool
     if _pool is None:
+        if not DATABASE_URL:
+            raise RuntimeError("DATABASE_URL is not set. Add it in Railway → Variables.")
         _pool = psycopg2.pool.ThreadedConnectionPool(1, 10, DATABASE_URL)
     return _pool
 
