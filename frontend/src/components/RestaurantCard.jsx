@@ -15,15 +15,17 @@ export default function RestaurantCard({
   pinned, flagged, compact,
   onSelect, onStatusChange,
   onTogglePin, onToggleFlag,
-  onEdit,
+  onEdit, onDelete,
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
 }) {
   const [tasks, setTasks]                   = useState([]);
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
-  const [showDotMenu, setShowDotMenu]       = useState(false);
-  const [ridCopied, setRidCopied]           = useState(false);
-  const dotMenuRef                          = useRef(null);
+  const [showStatusMenu, setShowStatusMenu]   = useState(false);
+  const [showDotMenu, setShowDotMenu]         = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting]               = useState(false);
+  const [ridCopied, setRidCopied]             = useState(false);
+  const dotMenuRef                            = useRef(null);
 
   useEffect(() => {
     api.getTasks(restaurant.id).then(setTasks);
@@ -58,7 +60,25 @@ export default function RestaurantCard({
   const openEdit = (e) => {
     e.stopPropagation();
     setShowDotMenu(false);
+    setConfirmingDelete(false);
     onEdit(restaurant);
+  };
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    setConfirmingDelete(true);
+  };
+
+  const handleDeleteConfirm = async (e) => {
+    e.stopPropagation();
+    setDeleting(true);
+    try { await onDelete(restaurant.id); }
+    finally { setDeleting(false); setShowDotMenu(false); setConfirmingDelete(false); }
+  };
+
+  const handleDeleteCancel = (e) => {
+    e.stopPropagation();
+    setConfirmingDelete(false);
   };
 
   // ── Three-dot menu ───────────────────────────────────────────────
@@ -66,7 +86,7 @@ export default function RestaurantCard({
     <div className="three-dot-wrap" ref={dotMenuRef} onClick={(e) => e.stopPropagation()}>
       <button
         className="three-dot-btn"
-        onClick={() => setShowDotMenu((v) => !v)}
+        onClick={() => { setShowDotMenu((v) => !v); setConfirmingDelete(false); }}
         title="More options"
       >⋮</button>
       {showDotMenu && (
@@ -74,6 +94,23 @@ export default function RestaurantCard({
           <button className="three-dot-item" onClick={openEdit}>
             ✏ Edit
           </button>
+          {!confirmingDelete ? (
+            <button className="three-dot-item three-dot-item--danger" onClick={handleDeleteClick}>
+              🗑 Delete
+            </button>
+          ) : (
+            <div className="three-dot-confirm">
+              <p className="three-dot-confirm-text">Delete restaurant &amp; all tasks?</p>
+              <div className="three-dot-confirm-btns">
+                <button className="three-dot-cancel-btn" onClick={handleDeleteCancel} disabled={deleting}>
+                  Cancel
+                </button>
+                <button className="three-dot-delete-btn" onClick={handleDeleteConfirm} disabled={deleting}>
+                  {deleting ? "…" : "Delete"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

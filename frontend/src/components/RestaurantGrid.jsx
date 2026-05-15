@@ -6,7 +6,7 @@ export default function RestaurantGrid({
   pins, flags, viewMode,
   onSelect, onStatusChange,
   onTogglePin, onToggleFlag,
-  onEdit,
+  onEdit, onDelete,
   onReorder, onSaveOrder,
 }) {
   const [draggedId, setDraggedId] = useState(null);
@@ -62,6 +62,7 @@ export default function RestaurantGrid({
             onTogglePin={onTogglePin}
             onToggleFlag={onToggleFlag}
             onEdit={onEdit}
+            onDelete={onDelete}
             isDragging={draggedId === r.id}
             isDragOver={dragOverId === r.id}
             onDragStart={() => handleDragStart(r.id)}

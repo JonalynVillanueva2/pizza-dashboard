@@ -37,6 +37,12 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
+  bulkDeleteTasks: (restaurantIds) =>
+    request("/api/tasks/bulk", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ restaurant_ids: restaurantIds }),
+    }),
   getTasks: (rid) => request(`/api/tasks/${rid}`),
   createTask: (rid, text, due_date = null) =>
     request(`/api/tasks/${rid}`, {

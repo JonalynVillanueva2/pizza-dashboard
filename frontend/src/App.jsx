@@ -156,6 +156,16 @@ export default function App() {
     api.getAllTasks().then(setAllTasks);
   }, []);
 
+  // Bulk delete tasks (from summary panel selection)
+  const handleBulkDeleteTasks = useCallback(async (rids) => {
+    await api.bulkDeleteTasks(rids);
+    setAllTasks((prev) => {
+      const next = { ...prev };
+      rids.forEach((rid) => { delete next[rid]; });
+      return next;
+    });
+  }, []);
+
   // Update restaurant
   const handleUpdateRestaurant = useCallback(async (rid, data) => {
     await api.updateRestaurant(rid, data);
@@ -248,6 +258,7 @@ export default function App() {
           restaurants={restaurants}
           onSelectRestaurant={setSelected}
           onToggleTask={handleToggleTaskSummary}
+          onBulkDeleteTasks={handleBulkDeleteTasks}
         />
         <FilterBar
           filters={FILTERS}
@@ -273,6 +284,7 @@ export default function App() {
           onTogglePin={handleTogglePin}
           onToggleFlag={handleToggleFlag}
           onEdit={setEditTarget}
+          onDelete={handleDeleteRestaurant}
           onReorder={handleReorder}
           onSaveOrder={handleSaveOrder}
         />

@@ -998,7 +998,7 @@ body {
 /* Column header row */
 .ts-table-head {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 1fr 1fr;
   background: var(--tp-50);
   border-bottom: 2px solid var(--tp-100);
   position: sticky;
@@ -1007,6 +1007,9 @@ body {
 }
 .ts-col-resto-head,
 .ts-col-tasks-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 7px 14px;
   font-size: 11px;
   font-weight: 700;
@@ -1019,12 +1022,14 @@ body {
 /* Data rows */
 .ts-table-row {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 1fr 1fr;
   border-bottom: 1px solid var(--tp-50);
   transition: background 0.12s;
 }
 .ts-table-row:last-child { border-bottom: none; }
 .ts-table-row:hover { background: #fdfbff; }
+.ts-table-row.ts-row-selected { background: #f5f0ff; }
+.ts-table-row.ts-row-selected:hover { background: #ede5ff; }
 
 /* Left column */
 .ts-col-resto {
@@ -1528,3 +1533,149 @@ body {
   cursor: pointer;
 }
 .task-cancel-btn:hover { background: var(--t-bg); }
+
+/* ── Three-dot danger item ───────────────────────────────────────── */
+.three-dot-item--danger {
+  color: #dc2626;
+}
+.three-dot-item--danger:hover {
+  background: #fff5f5;
+  color: #b91c1c;
+}
+
+/* ── Three-dot inline delete confirmation ────────────────────────── */
+.three-dot-confirm {
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--t-border);
+}
+.three-dot-confirm-text {
+  font-size: 12px;
+  color: var(--t-text);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+.three-dot-confirm-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.three-dot-cancel-btn {
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid var(--t-border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-sec);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.three-dot-cancel-btn:hover:not(:disabled) { background: var(--t-bg); }
+.three-dot-cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.three-dot-delete-btn {
+  padding: 4px 10px;
+  background: #dc2626;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.three-dot-delete-btn:hover:not(:disabled) { background: #b91c1c; }
+.three-dot-delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Task Summary — selection checkboxes ─────────────────────────── */
+.ts-sel-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--t-border);
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+  position: relative;
+}
+.ts-sel-checkbox:checked {
+  background: var(--tp-700);
+  border-color: var(--tp-700);
+}
+.ts-sel-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: -1px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+.ts-sel-checkbox:hover:not(:checked) { border-color: var(--tp-500); }
+
+/* ── Task Summary — selection action bar ─────────────────────────── */
+.ts-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+}
+.ts-action-label {
+  font-size: 13px;
+  color: #b91c1c;
+  font-weight: 600;
+  flex: 1;
+}
+.ts-delete-btn {
+  padding: 6px 14px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ts-delete-btn:hover { background: #b91c1c; }
+
+.ts-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.ts-confirm-text {
+  font-size: 12px;
+  color: #7f1d1d;
+  flex: 1;
+}
+.ts-confirm-yes {
+  padding: 5px 12px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ts-confirm-yes:hover { background: #b91c1c; }
+.ts-confirm-no {
+  padding: 5px 12px;
+  background: none;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #b91c1c;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.ts-confirm-no:hover { background: #fff5f5; }

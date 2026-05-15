@@ -3,9 +3,11 @@ import { useState } from "react";
 const today = new Date().toISOString().slice(0, 10);
 
 export default function TaskSummaryPanel({
-  allTasks, restaurants, onSelectRestaurant, onToggleTask,
+  allTasks, restaurants, onSelectRestaurant, onToggleTask, onBulkDeleteTasks,
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen]           = useState(true);
+  const [selected, setSelected]   = useState(new Set());
+  const [confirming, setConfirming] = useState(false);
 
   const summary = restaurants
     .map((r) => {
@@ -21,7 +23,30 @@ export default function TaskSummaryPanel({
   const pct          = grandTotal > 0 ? Math.round((grandDone / grandTotal) * 100) : 0;
   const pendingCount = grandTotal - grandDone;
 
-  const sorted = [...summary].sort((a, b) => b.pending - a.pending);
+  const sorted      = [...summary].sort((a, b) => b.pending - a.pending);
+  const allSelected = selected.size === sorted.length && sorted.length > 0;
+  const someSelected = selected.size > 0;
+
+  const toggleSelect = (rid) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(rid)) next.delete(rid);
+      else next.add(rid);
+      return next;
+    });
+    setConfirming(false);
+  };
+
+  const toggleSelectAll = () => {
+    setSelected(allSelected ? new Set() : new Set(sorted.map((s) => s.restaurant.id)));
+    setConfirming(false);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    await onBulkDeleteTasks([...selected]);
+    setSelected(new Set());
+    setConfirming(false);
+  };
 
   if (grandTotal === 0) return null;
 
@@ -47,24 +72,65 @@ export default function TaskSummaryPanel({
         </div>
       </div>
 
-      {/* ── Table body ── */}
+      {/* ── Selection action bar ── */}
+      {open && someSelected && (
+        <div className="ts-action-bar" onClick={(e) => e.stopPropagation()}>
+          <span className="ts-action-label">
+            {selected.size} restaurant{selected.size !== 1 ? "s" : ""} selected
+          </span>
+          {!confirming ? (
+            <button className="ts-delete-btn" onClick={() => setConfirming(true)}>
+              🗑 Delete Tasks
+            </button>
+          ) : (
+            <div className="ts-confirm-row">
+              <span className="ts-confirm-text">
+                Delete all tasks for {selected.size} restaurant{selected.size !== 1 ? "s" : ""}?
+              </span>
+              <button className="ts-confirm-yes" onClick={handleDeleteConfirmed}>Yes, Delete</button>
+              <button className="ts-confirm-no"  onClick={() => setConfirming(false)}>Cancel</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Table ── */}
       {open && (
         <div className="ts-table-wrap">
           {/* Column headers */}
           <div className="ts-table-head">
-            <div className="ts-col-resto-head">Restaurant</div>
+            <div className="ts-col-resto-head">
+              <input
+                type="checkbox"
+                className="ts-sel-checkbox"
+                checked={allSelected}
+                onChange={toggleSelectAll}
+                title={allSelected ? "Deselect all" : "Select all"}
+              />
+              Restaurant
+            </div>
             <div className="ts-col-tasks-head">Tasks</div>
           </div>
 
           {/* Rows */}
           {sorted.map(({ restaurant, total, done, pending, tasks }) => {
-            const rpct = Math.round((done / total) * 100);
+            const rpct       = Math.round((done / total) * 100);
+            const isSelected = selected.has(restaurant.id);
             return (
-              <div key={restaurant.id} className="ts-table-row">
-
-                {/* Left: restaurant info */}
+              <div
+                key={restaurant.id}
+                className={`ts-table-row${isSelected ? " ts-row-selected" : ""}`}
+              >
+                {/* Left: restaurant */}
                 <div className="ts-col-resto">
                   <div className="ts-resto-info">
+                    <input
+                      type="checkbox"
+                      className="ts-sel-checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelect(restaurant.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
                     <span className={`ts-dot${pending === 0 ? " done" : ""}`} />
                     <button
                       className="ts-resto-name"
@@ -85,7 +151,7 @@ export default function TaskSummaryPanel({
                   </div>
                 </div>
 
-                {/* Right: tasks as checkboxes */}
+                {/* Right: tasks */}
                 <div className="ts-col-tasks">
                   {tasks.map((task) => {
                     const overdue = task.due_date && !task.done && task.due_date < today;
@@ -114,7 +180,6 @@ export default function TaskSummaryPanel({
                     );
                   })}
                 </div>
-
               </div>
             );
           })}

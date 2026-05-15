@@ -335,6 +335,19 @@ def _row_to_task(row) -> dict:
             "done": row[3], "due_date": row[4]}
 
 
+@app.delete("/api/tasks/bulk")
+def bulk_delete_tasks(body: dict):
+    """Delete all tasks for the given list of restaurant IDs."""
+    rids = body.get("restaurant_ids", [])
+    if not rids:
+        return {"ok": True, "deleted_for": 0}
+    with db() as conn:
+        with conn.cursor() as cur:
+            for rid in rids:
+                cur.execute("DELETE FROM tasks WHERE restaurant_id = %s", (rid,))
+    return {"ok": True, "deleted_for": len(rids)}
+
+
 @app.post("/api/tasks/bulk")
 def bulk_create_tasks(body: BulkTaskCreate):
     """Add the same task to all restaurants matching a status filter."""
