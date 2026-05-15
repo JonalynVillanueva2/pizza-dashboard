@@ -954,6 +954,7 @@ body {
   overflow: hidden;
 }
 
+/* Header */
 .ts-header {
   display: flex;
   align-items: center;
@@ -966,98 +967,83 @@ body {
 }
 .ts-header:hover { opacity: 0.95; }
 
-.ts-header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ts-icon { font-size: 16px; }
-.ts-title {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
+.ts-header-left { display: flex; align-items: center; gap: 8px; }
+.ts-icon  { font-size: 16px; }
+.ts-title { font-size: 14px; font-weight: 700; letter-spacing: 0.3px; }
 
 .ts-pending-badge {
-  background: #ef4444;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 20px;
+  background: #ef4444; color: #fff;
+  font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
 }
 .ts-all-done-badge {
-  background: var(--tg-500);
-  color: var(--t-dark);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 20px;
+  background: var(--tg-500); color: var(--t-dark);
+  font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
 }
 
-.ts-header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.ts-overall {
-  font-size: 12px;
-  opacity: 0.85;
-  white-space: nowrap;
-}
-.ts-mini-bar {
-  width: 80px;
-  height: 6px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.ts-mini-fill {
-  height: 100%;
-  background: var(--tg-500);
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-.ts-pct {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--tg-400);
-  min-width: 36px;
-  text-align: right;
-}
-.ts-chevron {
-  font-size: 10px;
-  opacity: 0.7;
-}
+.ts-header-right { display: flex; align-items: center; gap: 10px; }
+.ts-overall      { font-size: 12px; opacity: 0.85; white-space: nowrap; }
+.ts-mini-bar     { width: 80px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+.ts-mini-fill    { height: 100%; background: var(--tg-500); border-radius: 3px; transition: width 0.4s ease; }
+.ts-pct          { font-size: 13px; font-weight: 700; color: var(--tg-400); min-width: 36px; text-align: right; }
+.ts-chevron      { font-size: 10px; opacity: 0.7; }
 
-/* Body */
-.ts-body {
-  padding: 8px 0;
-  max-height: 260px;
+/* ── Two-column table ────────────────────────────────────────────── */
+.ts-table-wrap {
+  max-height: 380px;
   overflow-y: auto;
 }
 
-.ts-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 16px;
-  gap: 12px;
-  transition: background 0.15s;
+/* Column header row */
+.ts-table-head {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  background: var(--tp-50);
+  border-bottom: 2px solid var(--tp-100);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
-.ts-row:hover { background: var(--tp-50); }
+.ts-col-resto-head,
+.ts-col-tasks-head {
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-sec);
+}
+.ts-col-resto-head { border-right: 1px solid var(--tp-100); }
 
-.ts-row-left {
+/* Data rows */
+.ts-table-row {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  border-bottom: 1px solid var(--tp-50);
+  transition: background 0.12s;
+}
+.ts-table-row:last-child { border-bottom: none; }
+.ts-table-row:hover { background: #fdfbff; }
+
+/* Left column */
+.ts-col-resto {
+  padding: 10px 14px;
+  border-right: 1px solid var(--tp-100);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+
+.ts-resto-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
+  gap: 6px;
 }
 
 .ts-dot {
-  width: 8px;
-  height: 8px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   background: #ef4444;
   flex-shrink: 0;
@@ -1065,119 +1051,112 @@ body {
 .ts-dot.done { background: var(--tg-700); }
 
 .ts-resto-name {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--tp-700);
-  cursor: pointer;
+  background: none; border: none; padding: 0;
+  font-size: 13px; font-weight: 600;
+  color: var(--tp-700); cursor: pointer;
   text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 180px;
 }
 .ts-resto-name:hover { text-decoration: underline; }
 
-.ts-row-right {
+.ts-resto-progress {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 6px;
 }
 
 .ts-bar {
-  width: 80px;
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-  overflow: hidden;
+  width: 70px; height: 5px;
+  background: var(--border); border-radius: 3px; overflow: hidden;
 }
 .ts-bar-fill {
-  height: 100%;
-  background: var(--tp-700);
-  border-radius: 3px;
-  transition: width 0.3s ease;
+  height: 100%; background: var(--tp-700);
+  border-radius: 3px; transition: width 0.3s ease;
 }
 
-.ts-count {
-  font-size: 12px;
+.ts-count { font-size: 11px; color: var(--text-sec); white-space: nowrap; }
+.ts-pending-inline { color: #ef4444; font-weight: 600; }
+
+/* Right column — tasks */
+.ts-col-tasks {
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+}
+
+.ts-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 5px;
+  transition: background 0.12s;
+}
+.ts-task-row:hover { background: var(--tp-50); }
+
+/* Custom checkbox */
+.ts-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px; height: 15px;
+  border: 2px solid var(--tp-300);
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ts-checkbox:checked {
+  background: var(--tp-700);
+  border-color: var(--tp-700);
+}
+.ts-checkbox:checked::after {
+  content: "✓";
+  position: absolute;
+  top: -1px; left: 1px;
+  font-size: 10px;
+  color: #fff;
+  font-weight: 700;
+}
+.ts-checkbox:hover:not(:checked) { border-color: var(--tp-700); }
+
+.ts-task-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--t-text);
+  line-height: 1.4;
+}
+
+.ts-task-row--done .ts-task-label {
+  text-decoration: line-through;
   color: var(--text-sec);
+  opacity: 0.65;
+}
+
+.ts-task-due-tag {
+  font-size: 11px;
+  color: var(--text-sec);
+  background: var(--tp-50);
+  padding: 1px 7px;
+  border-radius: 10px;
   white-space: nowrap;
-  min-width: 60px;
-  text-align: right;
+  flex-shrink: 0;
+}
+.ts-task-due-tag.overdue {
+  color: #dc2626;
+  background: #fef2f2;
+  font-weight: 600;
 }
 .ts-pending-inline {
   color: #ef4444;
   font-weight: 600;
 }
 
-/* ── Task summary — expand button & task list ────────────────────── */
-.ts-resto-group { border-bottom: 1px solid var(--tp-50); }
-.ts-resto-group:last-child { border-bottom: none; }
-
-.ts-expand-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 9px;
-  color: var(--text-sec);
-  padding: 2px 4px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-.ts-expand-btn:hover { color: var(--tp-700); }
-
-.ts-tasks-list {
-  padding: 4px 16px 8px 52px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.ts-task-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--t-text);
-}
-
-.ts-task-check {
-  font-size: 13px;
-  flex-shrink: 0;
-  color: var(--text-sec);
-}
-
-.ts-task-done .ts-task-text {
-  text-decoration: line-through;
-  color: var(--text-sec);
-  opacity: 0.7;
-}
-
-.ts-task-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ts-task-due {
-  font-size: 11px;
-  color: var(--text-sec);
-  flex-shrink: 0;
-  background: var(--tp-50);
-  padding: 1px 6px;
-  border-radius: 10px;
-}
-.ts-task-due.overdue {
-  color: #dc2626;
-  background: #fef2f2;
-  font-weight: 600;
-}
+/* (task summary expand/list styles replaced by ts-table layout above) */
 
 /* ── Bulk Task button ────────────────────────────────────────────── */
 .bulk-task-btn {

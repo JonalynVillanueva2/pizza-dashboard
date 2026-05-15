@@ -2,19 +2,10 @@ import { useState } from "react";
 
 const today = new Date().toISOString().slice(0, 10);
 
-export default function TaskSummaryPanel({ allTasks, restaurants, onSelectRestaurant }) {
-  const [open, setOpen]         = useState(true);
-  const [expanded, setExpanded] = useState(new Set());
-
-  const toggleExpand = (rid, e) => {
-    e.stopPropagation();
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(rid)) next.delete(rid);
-      else next.add(rid);
-      return next;
-    });
-  };
+export default function TaskSummaryPanel({
+  allTasks, restaurants, onSelectRestaurant, onToggleTask,
+}) {
+  const [open, setOpen] = useState(true);
 
   const summary = restaurants
     .map((r) => {
@@ -36,7 +27,8 @@ export default function TaskSummaryPanel({ allTasks, restaurants, onSelectRestau
 
   return (
     <div className="task-summary-panel">
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div className="ts-header" onClick={() => setOpen((v) => !v)}>
         <div className="ts-header-left">
           <span className="ts-icon">📋</span>
@@ -55,72 +47,73 @@ export default function TaskSummaryPanel({ allTasks, restaurants, onSelectRestau
         </div>
       </div>
 
-      {/* Body */}
+      {/* ── Table body ── */}
       {open && (
-        <div className="ts-body">
-          {sorted.map(({ restaurant, total, done, pending, tasks }) => {
-            const rpct       = Math.round((done / total) * 100);
-            const isExpanded = expanded.has(restaurant.id);
-            return (
-              <div key={restaurant.id} className="ts-resto-group">
+        <div className="ts-table-wrap">
+          {/* Column headers */}
+          <div className="ts-table-head">
+            <div className="ts-col-resto-head">Restaurant</div>
+            <div className="ts-col-tasks-head">Tasks</div>
+          </div>
 
-                {/* Restaurant row */}
-                <div className="ts-row">
-                  <div className="ts-row-left">
-                    <button
-                      className="ts-expand-btn"
-                      onClick={(e) => toggleExpand(restaurant.id, e)}
-                      title={isExpanded ? "Collapse" : "Show tasks"}
-                    >
-                      {isExpanded ? "▼" : "▶"}
-                    </button>
+          {/* Rows */}
+          {sorted.map(({ restaurant, total, done, pending, tasks }) => {
+            const rpct = Math.round((done / total) * 100);
+            return (
+              <div key={restaurant.id} className="ts-table-row">
+
+                {/* Left: restaurant info */}
+                <div className="ts-col-resto">
+                  <div className="ts-resto-info">
                     <span className={`ts-dot${pending === 0 ? " done" : ""}`} />
                     <button
                       className="ts-resto-name"
                       onClick={() => onSelectRestaurant(restaurant)}
+                      title="Open restaurant"
                     >
                       {restaurant.name}
                     </button>
                   </div>
-                  <div className="ts-row-right">
+                  <div className="ts-resto-progress">
                     <div className="ts-bar">
                       <div className="ts-bar-fill" style={{ width: `${rpct}%` }} />
                     </div>
                     <span className="ts-count">
                       {done}/{total}
-                      {pending > 0 && (
-                        <span className="ts-pending-inline"> · {pending} left</span>
-                      )}
+                      {pending > 0 && <span className="ts-pending-inline"> · {pending} left</span>}
                     </span>
                   </div>
                 </div>
 
-                {/* Task items — shown when expanded */}
-                {isExpanded && (
-                  <div className="ts-tasks-list">
-                    {tasks.map((task) => {
-                      const overdue = task.due_date && !task.done && task.due_date < today;
-                      return (
-                        <div
-                          key={task.id}
-                          className={[
-                            "ts-task-item",
-                            task.done ? "ts-task-done"    : "",
-                            overdue   ? "ts-task-overdue" : "",
-                          ].filter(Boolean).join(" ")}
-                        >
-                          <span className="ts-task-check">{task.done ? "☑" : "☐"}</span>
-                          <span className="ts-task-text">{task.text}</span>
-                          {task.due_date && (
-                            <span className={`ts-task-due${overdue ? " overdue" : ""}`}>
-                              {overdue ? `⚠ ${task.due_date}` : task.due_date}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                {/* Right: tasks as checkboxes */}
+                <div className="ts-col-tasks">
+                  {tasks.map((task) => {
+                    const overdue = task.due_date && !task.done && task.due_date < today;
+                    return (
+                      <label
+                        key={task.id}
+                        className={[
+                          "ts-task-row",
+                          task.done ? "ts-task-row--done"    : "",
+                          overdue   ? "ts-task-row--overdue" : "",
+                        ].filter(Boolean).join(" ")}
+                      >
+                        <input
+                          type="checkbox"
+                          className="ts-checkbox"
+                          checked={task.done}
+                          onChange={() => onToggleTask(restaurant.id, task.id)}
+                        />
+                        <span className="ts-task-label">{task.text}</span>
+                        {task.due_date && (
+                          <span className={`ts-task-due-tag${overdue ? " overdue" : ""}`}>
+                            {overdue ? `⚠ ${task.due_date}` : task.due_date}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
 
               </div>
             );

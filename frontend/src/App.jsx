@@ -141,6 +141,15 @@ export default function App() {
     });
   }, []);
 
+  // Toggle task directly from summary panel
+  const handleToggleTaskSummary = useCallback(async (rid, taskId) => {
+    const updated = await api.toggleTask(rid, taskId);
+    setAllTasks((prev) => ({
+      ...prev,
+      [rid]: (prev[rid] || []).map((t) => t.id === taskId ? updated : t),
+    }));
+  }, []);
+
   // Bulk create tasks
   const handleBulkCreateTasks = useCallback(async (data) => {
     await api.bulkCreateTasks(data);
@@ -238,6 +247,7 @@ export default function App() {
           allTasks={allTasks}
           restaurants={restaurants}
           onSelectRestaurant={setSelected}
+          onToggleTask={handleToggleTaskSummary}
         />
         <FilterBar
           filters={FILTERS}
