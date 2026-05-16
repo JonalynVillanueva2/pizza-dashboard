@@ -192,6 +192,15 @@ class NoteUpdate(BaseModel):
     content: str
 
 
+class NoteCard(BaseModel):
+    id: str
+    text: str
+
+
+class NoteCardCreate(BaseModel):
+    text: str
+
+
 class StatusUpdate(BaseModel):
     status: str
 
@@ -463,16 +472,49 @@ def delete_task(rid: str, task_id: str):
     return {"ok": True}
 
 
-# --- Notes ---
+# --- Notes (card-based) ---
 
 @app.get("/api/notes")
 def get_notes():
-    return {"content": kv_get("notes", "")}
+    raw = kv_get("notes_cards", None)
+    if raw is not None:
+        return {"cards": json.loads(raw)}
+    # Migrate old single-string notes into one card if present
+    old = kv_get("notes", "").strip()
+    if old:
+        import uuid as _uuid
+        cards = [{"id": str(_uuid.uuid4()), "text": old}]
+        kv_set("notes_cards", json.dumps(cards))
+        return {"cards": cards}
+    return {"cards": []}
 
 
 @app.post("/api/notes")
-def save_notes(body: NoteUpdate):
-    kv_set("notes", body.content)
+def add_note_card(body: NoteCardCreate):
+    import uuid as _uuid
+    raw = kv_get("notes_cards", None)
+    cards = json.loads(raw) if raw else []
+    new_card = {"id": str(_uuid.uuid4()), "text": body.text.strip()}
+    cards.insert(0, new_card)  # newest first
+    kv_set("notes_cards", json.dumps(cards))
+    return new_card
+
+
+@app.put("/api/notes/{note_id}")
+def update_note_card(note_id: str, body: NoteCardCreate):
+    raw = kv_get("notes_cards", None)
+    cards = json.loads(raw) if raw else []
+    cards = [c if c["id"] != note_id else {**c, "text": body.text.strip()} for c in cards]
+    kv_set("notes_cards", json.dumps(cards))
+    return {"ok": True}
+
+
+@app.delete("/api/notes/{note_id}")
+def delete_note_card(note_id: str):
+    raw = kv_get("notes_cards", None)
+    cards = json.loads(raw) if raw else []
+    cards = [c for c in cards if c["id"] != note_id]
+    kv_set("notes_cards", json.dumps(cards))
     return {"ok": True}
 
 

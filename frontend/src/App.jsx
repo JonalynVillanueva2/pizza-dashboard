@@ -19,7 +19,7 @@ export default function App() {
   const [filter, setFilter]             = useState("All");
   const [search, setSearch]             = useState("");
   const [selected, setSelected]         = useState(null);
-  const [notes, setNotes]               = useState("");
+  const [notes, setNotes]               = useState([]);
   const [loading, setLoading]           = useState(true);
   const [pins, setPins]                 = useState(new Set());
   const [flags, setFlags]               = useState(new Set());
@@ -55,7 +55,7 @@ export default function App() {
       }
       setRestaurants(restos);
       setConfig(cfg);
-      setNotes(n.content || "");
+      setNotes(n.cards || []);
       setPins(new Set(savedPins || []));
       setFlags(new Set(savedFlags || []));
       setAllTasks(tasks || {});
@@ -87,10 +87,20 @@ export default function App() {
     setSelected((prev) => prev?.id === rid ? { ...prev, status: newStatus } : prev);
   }, []);
 
-  // Notes
-  const handleSaveNotes = useCallback((content) => {
-    setNotes(content);
-    api.saveNotes(content);
+  // Notes — card-based
+  const handleAddNote = useCallback(async (text) => {
+    const newCard = await api.addNote(text);
+    setNotes((prev) => [newCard, ...prev]);
+  }, []);
+
+  const handleUpdateNote = useCallback(async (noteId, text) => {
+    await api.updateNote(noteId, text);
+    setNotes((prev) => prev.map((n) => n.id === noteId ? { ...n, text } : n));
+  }, []);
+
+  const handleDeleteNote = useCallback(async (noteId) => {
+    await api.deleteNote(noteId);
+    setNotes((prev) => prev.filter((n) => n.id !== noteId));
   }, []);
 
   // Drag reorder
@@ -252,7 +262,12 @@ export default function App() {
       <Header />
       <div className="app-body">
         <StatsBar restaurants={restaurants} onFilter={setFilter} />
-        <NotesPanel notes={notes} onSave={handleSaveNotes} />
+        <NotesPanel
+          notes={notes}
+          onAdd={handleAddNote}
+          onUpdate={handleUpdateNote}
+          onDelete={handleDeleteNote}
+        />
         <TaskSummaryPanel
           allTasks={allTasks}
           restaurants={restaurants}

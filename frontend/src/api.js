@@ -61,13 +61,21 @@ export const api = {
   deleteTask: (rid, taskId) =>
     request(`/api/tasks/${rid}/${taskId}`, { method: "DELETE" }),
 
-  getNotes:   () => request("/api/notes"),
-  saveNotes:  (content) =>
+  getNotes:    () => request("/api/notes"),
+  addNote:     (text) =>
     request("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ text }),
     }),
+  updateNote:  (noteId, text) =>
+    request(`/api/notes/${noteId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    }),
+  deleteNote:  (noteId) =>
+    request(`/api/notes/${noteId}`, { method: "DELETE" }),
 
   updateStatus: (rid, status) =>
     request(`/api/status/${rid}`, {
